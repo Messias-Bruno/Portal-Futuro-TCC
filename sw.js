@@ -2,7 +2,7 @@
    Rede primeiro: com internet, sempre a versão mais nova do site.
    Sem internet, a última cópia guardada (os guias continuam abrindo).
    Nada de outros sites é guardado (Supabase, vídeo, fontes). */
-var CACHE = "portal-futuro-v1";
+var CACHE = "portal-futuro-v2";
 var SHELL = ["/", "/index.html", "/assets/css/style.css", "/assets/js/app.js", "/assets/js/config.js", "/assets/img/favicon.svg", "/assets/img/icon-192.png", "/manifest.webmanifest", "/404.html", "/assets/css/404.css"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

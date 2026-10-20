@@ -1,0 +1,13 @@
+Modelos de e-mail do Portal Futuro (em português)
+
+No painel do Supabase: Authentication → Emails → Templates.
+
+1. "Confirm signup"
+   Subject:  Confirme seu e-mail no Portal Futuro
+   Body:     cole todo o conteúdo de confirmar-cadastro.html (aba "Source")
+
+2. "Reset password"
+   Subject:  Crie uma senha nova no Portal Futuro
+   Body:     cole todo o conteúdo de nova-senha.html
+
+Clique em "Save changes" em cada um.

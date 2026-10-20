@@ -12,7 +12,8 @@ html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);font-fam
 .nf-art svg{display:block;width:100%;height:auto}
 .pg{fill:rgb(255 255 255 / .06);stroke:rgb(255 255 255 / .55);stroke-width:1.6}
 .ln{fill:none;stroke:rgb(255 255 255 / .28);stroke-width:1.4;stroke-linecap:round}
-.sp{stroke:rgb(255 255 255 / .6);stroke-width:1.6}
+.st{fill:#F6F3EC}
+.dot{fill:rgb(255 255 255 / .55)}
 .q circle{fill:var(--gold)} .q text{font-family:'Instrument Serif',Georgia,serif;font-size:22px;fill:#00283f}
 .q{transform-origin:160px 84px;animation:bob 3.2s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}

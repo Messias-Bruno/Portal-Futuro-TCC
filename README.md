@@ -46,7 +46,7 @@ Dê dois cliques em `index.html`. Ele abre em qualquer navegador e não precisa 
 portal-futuro/
 ├── index.html            Páginas, textos e ilustrações
 ├── assets/css/style.css  Visual: cores, fontes e layout (claro e escuro)
-├── assets/img/favicon.svg  Ícone da aba (livro aberto)
+├── assets/img/favicon.svg  Ícone da aba (estrela-guia)
 ├── assets/vendor/three-r128.min.js  Biblioteca 3D (three.js, licença MIT) usada no campus
 ├── assets/js/config.js   Endereço e chave pública do Supabase
 ├── assets/js/app.js      Navegação, login, sincronização, calendário, finanças, provas, agenda e salários
@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.17 (20/10/2026):** a estrela-guia substitui o livro aberto em toda a identidade: imagem de compartilhamento (`og-cover.jpg`) e página "não encontrada" (agora "Esta página saiu da rota.").
 - **v1.16 (20/10/2026):** novo ícone do site e do aplicativo: estrela-guia sobre um céu de amanhecer (`favicon.svg` e os ícones PNG do aplicativo, com versão "maskable" para Android).
 - **v1.15 (20/10/2026):** instalar como aplicativo no celular e no computador (PWA: `manifest.webmanifest`, `sw.js`, ícones), com passo a passo para iPhone; página "não encontrada" (`404.html`); botões para levar provas e agenda ao Google Agenda (arquivo `.ics`, com lembrete); cronômetro de estudo (Pomodoro 25/5/15) no Planejamento; revisão de acessibilidade (contraste das cores, link "Pular para o conteúdo", foco visível no teclado); seção "Números do portal" no perfil, só para o dono, com totais sem dados pessoais (`supabase/numeros.sql`).
 - **v1.14 (20/10/2026):** cartão de prévia para WhatsApp e redes (`assets/img/og-cover.jpg`); botão "Dar opinião" que guarda sugestões e problemas na tabela `feedback` do Supabase (só o dono lê, no Table Editor); datas conferidas em fontes oficiais (incluídos gabarito e convocados da Unicamp; 14/07 retirado por não ser feriado em Campinas; incluído o Dia do Evangélico, 12/08); biblioteca 3D baixada só ao abrir a página Campus.

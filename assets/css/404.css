@@ -1,0 +1,28 @@
+/* Portal Futuro · página "não encontrada" */
+:root{--bg:hsl(201 100% 13%);--fg:#fff;--muted:hsl(200 20% 78%);--gold:hsl(45 70% 72%);--sage:hsl(150 30% 75%)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);font-family:'Inter','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.nf{position:relative;min-height:100svh;display:grid;place-items:center;overflow:hidden;background:radial-gradient(120% 90% at 10% 0%,#0b4566 0%,#00283f 55%,#001a2a 100%);padding-block:48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.nf-glow span{position:absolute;border-radius:50%;filter:blur(70px);opacity:.45}
+.nf-glow span:nth-child(1){width:44vmax;height:44vmax;left:-14vmax;top:-12vmax;background:#1f6f8b}
+.nf-glow span:nth-child(2){width:30vmax;height:30vmax;right:-10vmax;bottom:-10vmax;background:#2f8f5b;opacity:.3}
+.nf-in{position:relative;z-index:1;max-width:620px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px}
+.nf-brand{font-family:'Instrument Serif',Georgia,serif;font-size:2rem;color:var(--fg);text-decoration:none}
+.nf-art{margin:8px 0 0;width:min(280px,70vw)}
+.nf-art svg{display:block;width:100%;height:auto}
+.pg{fill:rgb(255 255 255 / .06);stroke:rgb(255 255 255 / .55);stroke-width:1.6}
+.ln{fill:none;stroke:rgb(255 255 255 / .28);stroke-width:1.4;stroke-linecap:round}
+.sp{stroke:rgb(255 255 255 / .6);stroke-width:1.6}
+.q circle{fill:var(--gold)} .q text{font-family:'Instrument Serif',Georgia,serif;font-size:22px;fill:#00283f}
+.q{transform-origin:160px 84px;animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.nf-kick{margin:0;font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--sage)}
+h1{margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(2.4rem,1.6rem + 4vw,4rem);line-height:1;letter-spacing:-.02em;text-wrap:balance}
+h1 em{color:var(--gold)}
+.nf-lead{margin:0;color:var(--muted);font-size:1.05rem;line-height:1.7;max-width:46ch}
+.nf-actions{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:center;margin-top:8px}
+.nf-btn{display:inline-flex;align-items:center;height:50px;padding:0 28px;border-radius:999px;background:#fff;color:#00283f;font-weight:500;text-decoration:none;transition:transform .3s}
+.nf-btn:hover{transform:scale(1.03)}
+.nf-link{color:var(--fg);text-underline-offset:4px}
+:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){.q{animation:none}}

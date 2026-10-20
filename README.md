@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.15 (20/10/2026):** instalar como aplicativo no celular e no computador (PWA: `manifest.webmanifest`, `sw.js`, ícones), com passo a passo para iPhone; página "não encontrada" (`404.html`); botões para levar provas e agenda ao Google Agenda (arquivo `.ics`, com lembrete); cronômetro de estudo (Pomodoro 25/5/15) no Planejamento; revisão de acessibilidade (contraste das cores, link "Pular para o conteúdo", foco visível no teclado); seção "Números do portal" no perfil, só para o dono, com totais sem dados pessoais (`supabase/numeros.sql`).
 - **v1.14 (20/10/2026):** cartão de prévia para WhatsApp e redes (`assets/img/og-cover.jpg`); botão "Dar opinião" que guarda sugestões e problemas na tabela `feedback` do Supabase (só o dono lê, no Table Editor); datas conferidas em fontes oficiais (incluídos gabarito e convocados da Unicamp; 14/07 retirado por não ser feriado em Campinas; incluído o Dia do Evangélico, 12/08); biblioteca 3D baixada só ao abrir a página Campus.
 - **v1.13 (20/10/2026):** crédito do vídeo da abertura (MotionSites AI, modelo Velorah) no rodapé, no README e na política de privacidade; removida a busca pelo arquivo local do vídeo, que não existe.
 - **v1.12 (20/10/2026):** ilustrações animadas que faltavam no topo de Carreira (fichário), Cursos (duração dos cursos), Instituições (fachada com lupa), Documentos (pasta organizada) e Planejamento (semana com blocos de estudo); antes aparecia só a marcação `{{ILL:...}}`.

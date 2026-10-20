@@ -2855,8 +2855,49 @@
       { ok: u.areas.length > 0, t: "Áreas de interesse", f: "pfAreas" }
     ];
   }
+  /* Números do portal: o servidor só responde para a conta do dono (tabela portal_owners); para os outros, a seção nem aparece */
+  var numLoaded = 0, numUid = null;
+  function loadPortalNumbers(force) {
+    var box = $("pf-numeros");
+    if (!currentUser || !currentUser.cloud) { box.hidden = true; numUid = null; return; }
+    if (numUid !== currentUser.id) { box.hidden = true; numUid = currentUser.id; force = true; }
+    if (!force && Date.now() - numLoaded < 60000) return;
+    numLoaded = Date.now();
+    var uid = currentUser.id;
+    sbAuthed("POST", "/rest/v1/rpc/portal_stats", {}).then(function (s) {
+      if (!currentUser || currentUser.id !== uid) return;
+      if (!s || typeof s !== "object") { box.hidden = true; return; }
+      var n = function (k) { var v = Number(s[k]); return isFinite(v) ? v : 0; };
+      var grid = $("pfNumGrid"); clear(grid);
+      [["Contas criadas", n("contas"), n("confirmadas") + " com e-mail confirmado"],
+       ["Com Google", n("google"), "entraram pela conta Google"],
+       ["Novas na semana", n("novas7"), n("novas30") + " nos últimos 30 dias"],
+       ["Ativas na semana", n("ativas7"), "salvaram algo nos últimos 7 dias"],
+       ["Usando as ferramentas", n("comDados"), "contas com dados salvos"],
+       ["Sugestões", n("sugestoes"), "enviadas pelo botão do site"]].forEach(function (c) {
+        var d = el("div", { class: "stat" });
+        var top = el("span", { class: "top" }); top.appendChild(el("span", { class: "label", text: c[0] }));
+        d.appendChild(top); d.appendChild(el("span", { class: "v", text: String(c[1]) })); d.appendChild(el("span", { class: "s", text: c[2] }));
+        grid.appendChild(d);
+      });
+      var weeks = Array.isArray(s.semanas) ? s.semanas.slice(-8) : [], max = 1, bars = $("pfNumBars"); clear(bars);
+      weeks.forEach(function (w) { max = Math.max(max, Number(w.contas) || 0); });
+      weeks.forEach(function (w) {
+        var v = Number(w.contas) || 0, b = el("div", { class: "pf-bar" }), bar = el("i");
+        bar.style.height = Math.round(v / max * 100) + "%";
+        b.appendChild(el("b", { text: String(v) })); b.appendChild(bar); b.appendChild(el("span", { text: String(w.semana || "") }));
+        bars.appendChild(b);
+      });
+      bars.setAttribute("aria-label", "Contas novas por semana: " + weeks.map(function (w) { return "semana de " + w.semana + ", " + (Number(w.contas) || 0); }).join("; "));
+      var when = s.geradoEm ? new Date(s.geradoEm) : new Date();
+      $("pfNumWhen").textContent = "Atualizado em " + fmtStamp.format(isNaN(when) ? new Date() : when).replace(",", " às") + ".";
+      box.hidden = false;
+    }).catch(function () { box.hidden = true; numLoaded = 0; });
+  }
+
   function renderProfile() {
     if (!currentUser) return;
+    loadPortalNumbers(false);
     // conta local: relê do armazenamento, assim os campos novos do perfil sempre existem e estão validados
     var u = currentUser.cloud ? currentUser : authStore().users.filter(function (x) { return x.id === currentUser.id; })[0];
     if (!u) return;
@@ -3134,6 +3175,118 @@
       var req = logged && sbSess ? sbAuthed("POST", "/rest/v1/feedback", body, "return=minimal") : sbReq("POST", "/rest/v1/feedback", body, { prefer: "return=minimal" });
       req.then(function () { busy(btn, false, "Enviar"); finish(); }, function (er) { busy(btn, false, "Enviar"); err.textContent = cloudMsg(er, "Não foi possível enviar agora. Tente de novo em instantes."); });
     });
+  })();
+
+  $("pfNumRefresh").addEventListener("click", function () { loadPortalNumbers(true); });
+
+  /* Pular para o conteúdo: leva o foco para o título da página aberta (sem trocar o endereço) */
+  $("skipLink").addEventListener("click", function (e) {
+    e.preventDefault();
+    var v = document.querySelector("section.view:not([hidden])"), h = v && v.querySelector("h1");
+    if (h) { h.setAttribute("tabindex", "-1"); h.focus(); }
+  });
+
+  /* ---------- Cronômetro de estudo (Pomodoro) ---------- */
+  (function () {
+    var MODES = { foco: { min: 25, label: "Foco" }, curta: { min: 5, label: "Pausa curta" }, longa: { min: 15, label: "Pausa longa" } };
+    var POMO_KEY = "portalFuturo.pomo", mode = "foco", total = 25 * 60, left = total, endAt = 0, timer = null, baseTitle = document.title;
+    var ring = $("pmRing"), C = 2 * Math.PI * 52, box = document.querySelector(".pomo");
+    if (!ring) return;
+    ring.style.strokeDasharray = C.toFixed(2);
+    function todayCount() { var s = readJSON(localStorage, POMO_KEY); return s && s.d === iso(today) ? Number(s.n) || 0 : 0; }
+    function addCount() { var n = todayCount() + 1; writeJSON(localStorage, POMO_KEY, { d: iso(today), n: n }); return n; }
+    function fmt(s) { return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+    function paint() {
+      $("pmTime").textContent = fmt(left); $("pmLabel").textContent = MODES[mode].label;
+      ring.style.strokeDashoffset = (C * (1 - left / total)).toFixed(2);
+      box.classList.toggle("pause", mode !== "foco");
+      var n = todayCount(); $("pmCount").textContent = n ? n + (n === 1 ? " bloco de foco concluído hoje." : " blocos de foco concluídos hoje.") + (n % 4 === 0 ? " Hora de uma pausa longa!" : "") : "Nenhum bloco de foco concluído hoje.";
+      document.title = timer ? fmt(left) + " · " + MODES[mode].label + " · Portal Futuro" : baseTitle;
+    }
+    function setBtn() { $("pmStart").querySelector("span").textContent = timer ? "Pausar" : left < total ? "Continuar" : "Começar"; }
+    function setMode(m) {
+      stop(); mode = m; total = MODES[m].min * 60; left = total;
+      document.querySelectorAll("[data-pm]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pm === m)); });
+      paint(); setBtn();
+    }
+    function beep() {
+      try {
+        var A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+        var ctx = new A(); [0, .35, .7].forEach(function (t0) {
+          var o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = mode === "foco" ? 660 : 880; o.connect(g); g.connect(ctx.destination);
+          g.gain.setValueAtTime(.0001, ctx.currentTime + t0); g.gain.exponentialRampToValueAtTime(.25, ctx.currentTime + t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + t0 + .28);
+          o.start(ctx.currentTime + t0); o.stop(ctx.currentTime + t0 + .3);
+        });
+        setTimeout(function () { ctx.close(); }, 1500);
+      } catch (e) {}
+    }
+    function finish() {
+      stop(); beep();
+      var next;
+      if (mode === "foco") { var n = addCount(); next = n % 4 === 0 ? "longa" : "curta"; $("pmLive").textContent = "Bloco de foco concluído. Hora da pausa."; toast("Bloco de foco concluído. Hora da pausa!"); }
+      else { next = "foco"; $("pmLive").textContent = "Pausa terminada. Vamos para o próximo bloco de foco."; toast("Pausa terminada. Bora para o próximo bloco!"); }
+      setMode(next);
+    }
+    function tick() { left = Math.max(0, Math.round((endAt - Date.now()) / 1000)); paint(); if (left <= 0) finish(); }
+    function start() { if (timer) return; endAt = Date.now() + left * 1000; timer = setInterval(tick, 250); setBtn(); paint(); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } setBtn(); paint(); }
+    $("pmStart").addEventListener("click", function () { if (timer) stop(); else start(); });
+    $("pmReset").addEventListener("click", function () { setMode(mode); });
+    $("pmSkip").addEventListener("click", function () { if (mode === "foco") setMode("curta"); else setMode("foco"); });
+    document.querySelectorAll("[data-pm]").forEach(function (b) { b.addEventListener("click", function () { setMode(b.dataset.pm); }); });
+    paint();
+  })();
+
+  /* ---------- Levar provas e agenda para a agenda do celular (.ics) ---------- */
+  function icsEsc(s) { return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n"); }
+  function icsFold(line) { var out = [], s = line; while (s.length > 72) { out.push(s.slice(0, 72)); s = " " + s.slice(72); } out.push(s); return out.join("\r\n"); }
+  function icsDay(d) { return d.replace(/-/g, ""); }
+  function icsNextDay(d) { var x = parseD(d); x.setDate(x.getDate() + 1); return icsDay(iso(x)); }
+  function buildIcs(kind) {
+    var items = [];
+    if (kind === "provas") state.provas.forEach(function (p) { if (daysUntil(p.data) >= 0) items.push({ id: p.id, d: p.data, t: p.tipo + ": " + p.disc, desc: p.cont || "" }); });
+    else state.ativ.forEach(function (a) { if (!a.done && daysUntil(a.data) >= 0) items.push({ id: a.id, d: a.data, t: a.tit, desc: a.tipo }); });
+    var stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    var L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Portal Futuro//Agenda//PT-BR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+      "X-WR-CALNAME:" + icsEsc(kind === "provas" ? "Portal Futuro · Provas" : "Portal Futuro · Agenda")];
+    items.forEach(function (it) {
+      L.push("BEGIN:VEVENT", "UID:" + icsEsc(it.id) + "-" + kind + "@portal-futuro.netlify.app", "DTSTAMP:" + stamp,
+        "DTSTART;VALUE=DATE:" + icsDay(it.d), "DTEND;VALUE=DATE:" + icsNextDay(it.d), "SUMMARY:" + icsEsc(it.t));
+      if (it.desc) L.push("DESCRIPTION:" + icsEsc(it.desc + " · Portal Futuro"));
+      L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc("Amanhã: " + it.t), "TRIGGER:-PT15H", "END:VALARM", "END:VEVENT");
+    });
+    L.push("END:VCALENDAR");
+    return { text: L.map(icsFold).join("\r\n") + "\r\n", count: items.length };
+  }
+  document.querySelectorAll("[data-ics]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var kind = b.dataset.ics, r = buildIcs(kind);
+      if (!r.count) { toast(kind === "provas" ? "Não há avaliações futuras para levar à agenda." : "Não há atividades pendentes com data futura."); return; }
+      var blob = new Blob([r.text], { type: "text/calendar;charset=utf-8" });
+      var a = el("a", { href: URL.createObjectURL(blob), download: "portal-futuro-" + kind + ".ics" });
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      toast(r.count + (r.count === 1 ? " data enviada" : " datas enviadas") + " para a agenda. Abra o arquivo baixado para adicionar.");
+    });
+  });
+
+  /* ---------- Aplicativo (instalar na tela inicial) ---------- */
+  (function () {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); });
+    }
+    var wrap = $("installWrap"), btn = $("installBtn"), ios = $("iosDialog"), deferred = null;
+    var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (standalone) return;
+    if (isIOS) wrap.hidden = false;
+    window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; wrap.hidden = false; });
+    window.addEventListener("appinstalled", function () { wrap.hidden = true; deferred = null; toast("Portal Futuro instalado. Procure o ícone na tela do celular."); });
+    btn.addEventListener("click", function () {
+      if (deferred) { deferred.prompt(); deferred.userChoice.then(function () { deferred = null; }); return; }
+      if (isIOS) { document.body.classList.remove("has-cursor"); if (typeof ios.showModal === "function") ios.showModal(); else ios.setAttribute("open", ""); }
+    });
+    ios.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", function () { ios.close(); }); });
+    ios.addEventListener("click", function (e) { if (e.target === ios) ios.close(); });
   })();
 
   /* ---------- Inicialização ---------- */

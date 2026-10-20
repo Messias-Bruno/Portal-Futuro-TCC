@@ -1163,3 +1163,19 @@ body[data-page="perfil"] :is(.scope-dark,.topbar){--tone:var(--plum)}
 @media (max-width:600px){ .priv-dialog .priv-foot{padding-left:18px;padding-right:18px} }
 .gate-gnote{margin:-6px 0 0;text-align:center;font-size:.8rem}
 .gate-gnote .link-btn{font-size:inherit}
+/* Animações das figuras de Carreira, Cursos, Instituições, Documentos e Planejamento */
+.a-drawer{animation:drawer 4s cubic-bezier(.22,1,.36,1) infinite}
+.a-grow{transform-box:fill-box;transform-origin:bottom;animation:grow-up 4.5s cubic-bezier(.22,1,.36,1) infinite}
+.a-grow.g2{animation-delay:.25s} .a-grow.g3{animation-delay:.5s}
+.a-cap{animation:cap 4.5s ease-in-out infinite}
+.a-lens{animation:lens 6s ease-in-out infinite}
+.a-letter.l2{animation-delay:.5s}
+.a-block{transform-box:fill-box;transform-origin:center;animation:block 5s ease-in-out infinite}
+.a-block.b2{animation-delay:.3s} .a-block.b3{animation-delay:.6s} .a-block.b4{animation-delay:.9s} .a-block.b5{animation-delay:1.2s} .a-block.b6{animation-delay:1.5s}
+.a-hand{transform-box:view-box;transform-origin:170px 44px;animation:hand 5s linear infinite}
+@keyframes drawer{0%,20%{transform:translateY(0)}45%,80%{transform:translateY(8px)}100%{transform:translateY(0)}}
+@keyframes grow-up{0%{transform:scaleY(0)}30%,85%{transform:scaleY(1)}100%{transform:scaleY(1)}}
+@keyframes cap{0%,25%{transform:translateY(-12px);opacity:0}45%,85%{transform:translateY(0);opacity:1}100%{opacity:1}}
+@keyframes lens{0%,100%{transform:translate(0,0)}50%{transform:translate(-14px,-4px)}}
+@keyframes block{0%,10%{transform:scale(0);opacity:0}25%,85%{transform:scale(1);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes hand{to{transform:rotate(360deg)}}

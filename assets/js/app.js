@@ -270,6 +270,7 @@
 
   function route(token, animate) {
     closeMenu();
+    if (token === "privacidade") { openPrivacy(); if (!currentView) show("inicio", false); return; } // endereço direto da política (portal-futuro.netlify.app/#privacidade)
     if (VIEWS.indexOf(token) >= 0) {
       show(token, animate);
       window.scrollTo({ top: 0, behavior: "auto" });
@@ -287,6 +288,7 @@
   window.addEventListener("hashchange", function () {
     var token = location.hash.slice(1);
     if (/(^|&)(access_token|error)=/.test(token)) { location.reload(); return; } // link de login/recuperação aberto na mesma aba
+    if (token === "privacidade") { route(token, false); return; }
     var next = VIEWS.indexOf(token) >= 0 ? token : (SECTION_VIEW[token] || "inicio");
     if (document.startViewTransition && !reduceMotion && next !== currentView) {
       document.startViewTransition(function () { route(token, true); });
@@ -3028,14 +3030,18 @@
   }
 
   /* ---------- Política de privacidade ---------- */
+  var openPrivacy = function () {};
   (function () {
     var d = $("privDialog"), opener = null;
-    function close() { if (d.open) d.close(); }
+    function close() { if (d.open) d.close(); if (location.hash === "#privacidade") { try { history.replaceState(null, "", location.pathname + (currentView ? "#" + currentView : "")); } catch (e) {} } }
+    openPrivacy = function () {
+      document.body.classList.remove("has-cursor");
+      if (!d.open) { if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", ""); }
+      d.querySelector(".priv-body").scrollTop = 0; $("privOk").focus();
+    };
     document.querySelectorAll("[data-priv]").forEach(function (b) {
       b.addEventListener("click", function () {
-        opener = b; document.body.classList.remove("has-cursor");
-        if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
-        d.querySelector(".priv-body").scrollTop = 0; $("privOk").focus();
+        opener = b; openPrivacy();
       });
     });
     $("privClose").addEventListener("click", close); $("privOk").addEventListener("click", close);

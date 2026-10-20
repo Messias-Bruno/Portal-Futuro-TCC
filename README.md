@@ -80,6 +80,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.10 (20/10/2026):** endereço direto da política de privacidade: https://portal-futuro.netlify.app/#privacidade (usado na tela de consentimento do Google).
 - **v1.9 (20/10/2026):** nome completo do autor (Bruno Henrique Messias de Sousa) no rodapé, na tela de entrada, na política de privacidade e nos créditos; publicação automática pelo GitHub (repositório Portal-Futuro-TCC) no Netlify.
 - **v1.8 (20/10/2026):** política de privacidade (LGPD) em uma janela que abre no cadastro, no rodapé e no perfil, com o aceite registrado na conta; conta nova começa vazia (os exemplos ficam só na conta de demonstração); e-mails de confirmação e de nova senha em português (`supabase/emails`), enviados pelo Gmail do portal.
 - **v1.7 (20/10/2026):** login de verdade ligado (Supabase) para o endereço https://portal-futuro.netlify.app; arquivo `_headers` com os cabeçalhos de segurança para publicar arrastando a pasta no Netlify.

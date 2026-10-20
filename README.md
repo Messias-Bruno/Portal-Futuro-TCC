@@ -25,7 +25,7 @@ Dê dois cliques em `index.html`. Ele abre em qualquer navegador e não precisa 
 - Meu bairro: cerca de 190 bairros, condomínios e conjuntos habitacionais de Campinas, Sumaré, Hortolândia, Paulínia, Valinhos e Vinhedo, com as linhas que passam em cada um. Os dados ficam em `BAIRROS`, em `assets/js/app.js`, tirados das paradas listadas no BusInfo (linhas EMTU) e no Cittamobi (linhas da Emdec) em outubro de 2026.
 - Campus 3D: cada estrutura tem detalhes próprios (colunata da biblioteca, heliponto do hospital, pórtico da portaria, ônibus, carros, fonte da praça, ipês). No tema escuro, as janelas acendem como à noite.
 - Quem ativa "reduzir movimento" no sistema vê o site sem animações e sem o vídeo rodando.
-- O vídeo da abertura (de autoria própria) fica em `assets/video/abertura.mp4`. Se esse arquivo não existir, o site usa como reserva o endereço antigo em `d8j0ntlcm91z4.cloudfront.net` (lista `VIDEO_SRCS` em `assets/js/app.js`).
+- O vídeo da abertura **não é de autoria própria**: vem do modelo "Velorah" do site MotionSites AI (https://motionsites.ai/?prompt=velorah-hero) e é carregado do servidor deles (`d8j0ntlcm91z4.cloudfront.net`, lista `VIDEO_SRCS` em `assets/js/app.js`). Pelos Termos de Uso do MotionSites, os vídeos de fundo pertencem a eles; o arquivo não foi baixado nem hospedado neste projeto. Pedido de autorização de uso enviado ao MotionSites em 20/10/2026. Se o vídeo sair do ar, o site mostra a ilustração da biblioteca no lugar.
 
 ## Banco de dados (Supabase)
 
@@ -80,6 +80,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.13 (20/10/2026):** crédito do vídeo da abertura (MotionSites AI, modelo Velorah) no rodapé, no README e na política de privacidade; removida a busca pelo arquivo local do vídeo, que não existe.
 - **v1.12 (20/10/2026):** ilustrações animadas que faltavam no topo de Carreira (fichário), Cursos (duração dos cursos), Instituições (fachada com lupa), Documentos (pasta organizada) e Planejamento (semana com blocos de estudo); antes aparecia só a marcação `{{ILL:...}}`.
 - **v1.11 (20/10/2026):** login com Google ligado (projeto "Portal Futuro" no Google Cloud, conta portalfuturo.app@gmail.com), com aviso de que entrar com o Google é aceitar a política de privacidade.
 - **v1.10 (20/10/2026):** endereço direto da política de privacidade: https://portal-futuro.netlify.app/#privacidade (usado na tela de consentimento do Google).

@@ -2005,8 +2005,9 @@
   /* =================================================================
      Movimento (JavaScript puro, sem bibliotecas)
      ================================================================= */
-  // Primeiro o arquivo do próprio projeto; se ele não existir, usa o endereço antigo como reserva.
-  var VIDEO_SRCS = ["assets/video/abertura.mp4", "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4"];
+  // Vídeo do modelo Velorah (MotionSites AI), servido pelo endereço indicado no próprio modelo.
+  // Se ele sair do ar, o site mostra a ilustração da biblioteca no lugar.
+  var VIDEO_SRCS = ["https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4"];
   var vh = function () { return window.innerHeight || 800; };
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 

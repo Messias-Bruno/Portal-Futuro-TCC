@@ -30,6 +30,7 @@ Dê dois cliques em `index.html`. Ele abre em qualquer navegador e não precisa 
 ## Banco de dados (Supabase)
 
 - E-mails do login: enviados pelo Gmail `portalfuturo.app@gmail.com` (SMTP do Supabase, até 30 por hora). Modelos em português em `supabase/emails`.
+- Sugestões e problemas (botão "Dar opinião"): tabela `feedback` (`supabase/feedback.sql`). Para ler: painel do Supabase → Table Editor → feedback.
 - Política de privacidade: no `index.html` (janela `privDialog`). Ao mudar o texto, atualize a data e o `privacy_version` em `assets/js/app.js`.
 
 - Projeto: **Portal Futuro** (`baubfjqwrdyeqarmjjio`), plano gratuito.
@@ -80,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.14 (20/10/2026):** cartão de prévia para WhatsApp e redes (`assets/img/og-cover.jpg`); botão "Dar opinião" que guarda sugestões e problemas na tabela `feedback` do Supabase (só o dono lê, no Table Editor); datas conferidas em fontes oficiais (incluídos gabarito e convocados da Unicamp; 14/07 retirado por não ser feriado em Campinas; incluído o Dia do Evangélico, 12/08); biblioteca 3D baixada só ao abrir a página Campus.
 - **v1.13 (20/10/2026):** crédito do vídeo da abertura (MotionSites AI, modelo Velorah) no rodapé, no README e na política de privacidade; removida a busca pelo arquivo local do vídeo, que não existe.
 - **v1.12 (20/10/2026):** ilustrações animadas que faltavam no topo de Carreira (fichário), Cursos (duração dos cursos), Instituições (fachada com lupa), Documentos (pasta organizada) e Planejamento (semana com blocos de estudo); antes aparecia só a marcação `{{ILL:...}}`.
 - **v1.11 (20/10/2026):** login com Google ligado (projeto "Portal Futuro" no Google Cloud, conta portalfuturo.app@gmail.com), com aviso de que entrar com o Google é aceitar a política de privacidade.

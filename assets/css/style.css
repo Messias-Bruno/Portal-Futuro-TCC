@@ -1179,3 +1179,24 @@ body[data-page="perfil"] :is(.scope-dark,.topbar){--tone:var(--plum)}
 @keyframes lens{0%,100%{transform:translate(0,0)}50%{transform:translate(-14px,-4px)}}
 @keyframes block{0%,10%{transform:scale(0);opacity:0}25%,85%{transform:scale(1);opacity:1}100%{transform:scale(1);opacity:1}}
 @keyframes hand{to{transform:rotate(360deg)}}
+/* Dar opinião */
+.fb-fab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:44;display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 18px 0 14px;border-radius:999px;border:0;font:inherit;font-size:.88rem;font-weight:500;color:#fff;background:rgb(0 40 63 / .82);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgb(0 0 0 / .25);cursor:pointer;transition:transform .3s var(--ease)}
+.fb-fab:hover{transform:translateY(-2px)}
+.fb-fab .ico{width:19px;height:19px}
+body.locked .fb-fab{display:none}
+@media (max-width:600px){ .fb-fab{width:46px;padding:0;justify-content:center} .fb-fab span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)} }
+.fb-dialog{width:min(560px,calc(100% - 32px))}
+.fb-body{display:flex;flex-direction:column;gap:16px;padding-bottom:16px}
+.fb-kinds{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.fb-kinds legend{font-size:.85rem;font-weight:500;color:var(--fg);padding:0;margin-bottom:10px}
+.fb-kinds label{position:relative;cursor:pointer}
+.fb-kinds input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.fb-kinds span{display:inline-block;padding:8px 16px;border-radius:999px;font-size:.9rem;background:rgb(var(--ov) / .04);box-shadow:inset 0 0 0 1px var(--line);color:var(--text);transition:background-color .2s,color .2s}
+.fb-kinds input:checked + span{background:var(--inv);color:var(--on-inv);box-shadow:none}
+.fb-kinds input:focus-visible + span{outline:2px solid rgb(var(--ov) / .8);outline-offset:3px}
+.fb-body textarea{min-height:120px;resize:vertical}
+.fb-count{margin:0;text-align:right}
+.fb-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.fb-dialog .priv-foot{gap:10px}
+.fb-done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 10px}
+.fb-done .ib{width:56px;height:56px;border-radius:50%;color:var(--ok)}

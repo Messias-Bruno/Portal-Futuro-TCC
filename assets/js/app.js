@@ -1036,6 +1036,14 @@
 
   /* Cena 3D (three.js) */
   var C3 = { ready: false }; window.C3ref = C3;
+  // A biblioteca 3D (600 KB) só é baixada quando alguém abre a página Campus.
+  function loadThree(cb) {
+    if (window.THREE) { cb(); return; }
+    var s = document.createElement("script"), done = false;
+    var fin = function () { if (done) return; done = true; cb(); };
+    s.src = "assets/vendor/three-r128.min.js"; s.async = true; s.onload = fin; s.onerror = fin;
+    document.head.appendChild(s);
+  }
   function buildCampus3D() {
     var THREE = window.THREE, canvas = $("c3dCanvas"), stage = $("c3dStage");
     if (!THREE) { $("c3dFallback").hidden = false; canvas.hidden = true; $("c3dHint").hidden = true; return; }
@@ -1734,12 +1742,15 @@
     toast("Atividade adicionada.");
   });
 
-  /* ---------- Calendário Unicamp 2027 (Comvest) ---------- */
+  /* ---------- Calendário Unicamp 2027 (Comvest) ----------
+     Conferido em 20/10/2026: edital Comvest (via Estratégia Vestibulares) e Vestibulando Web. */
   var UNICAMP = [
     { a: "2026-05-11", b: "2026-06-05", t: "Pedidos de isenção da taxa" },
     { a: "2026-07-31", b: "2026-07-31", t: "Resultado dos pedidos de isenção" },
     { a: "2026-08-03", b: "2026-08-31", t: "Inscrições" },
     { a: "2026-10-18", b: "2026-10-18", t: "Provas da 1ª fase" },
+    { a: "2026-10-21", b: "2026-10-21", t: "Gabarito da 1ª fase" },
+    { a: "2026-11-23", b: "2026-11-23", t: "Lista de convocados para a 2ª fase" },
     { a: "2026-11-29", b: "2026-11-30", t: "Provas da 2ª fase" },
     { a: "2026-12-02", b: "2026-12-04", t: "Provas de habilidades específicas" },
     { a: "2027-01-25", b: "2027-01-25", t: "Resultado da 1ª chamada" },
@@ -1766,16 +1777,18 @@
   }
 
 
-  /* ---------- Calendário ao vivo ---------- */
+  /* ---------- Calendário ao vivo ----------
+     Feriados conferidos em 20/10/2026: decreto municipal de Campinas de 2026 (municipais: Paixão de Cristo,
+     Corpus Christi, Dia do Evangélico em 12/08 e N. Sra. da Conceição em 08/12). O aniversário da cidade (14/07) não é feriado. */
   var FERIADOS = [
     ["2026-01-01", "Confraternização Universal"], ["2026-02-16", "Carnaval (ponto facultativo)"], ["2026-02-17", "Carnaval (ponto facultativo)"],
     ["2026-04-03", "Sexta-feira Santa"], ["2026-04-21", "Tiradentes"], ["2026-05-01", "Dia do Trabalho"], ["2026-06-04", "Corpus Christi"],
-    ["2026-07-09", "Revolução Constitucionalista (SP)"], ["2026-07-14", "Aniversário de Campinas"], ["2026-09-07", "Independência do Brasil"],
+    ["2026-07-09", "Revolução Constitucionalista (SP)"], ["2026-08-12", "Dia do Evangélico (Campinas)"], ["2026-09-07", "Independência do Brasil"],
     ["2026-10-12", "Nossa Senhora Aparecida"], ["2026-11-02", "Finados"], ["2026-11-15", "Proclamação da República"],
     ["2026-11-20", "Dia da Consciência Negra"], ["2026-12-08", "Nossa Senhora da Conceição (Campinas)"], ["2026-12-25", "Natal"],
     ["2027-01-01", "Confraternização Universal"], ["2027-02-08", "Carnaval (ponto facultativo)"], ["2027-02-09", "Carnaval (ponto facultativo)"],
     ["2027-03-26", "Sexta-feira Santa"], ["2027-04-21", "Tiradentes"], ["2027-05-01", "Dia do Trabalho"], ["2027-05-27", "Corpus Christi"],
-    ["2027-07-09", "Revolução Constitucionalista (SP)"], ["2027-07-14", "Aniversário de Campinas"], ["2027-09-07", "Independência do Brasil"],
+    ["2027-07-09", "Revolução Constitucionalista (SP)"], ["2027-08-12", "Dia do Evangélico (Campinas)"], ["2027-09-07", "Independência do Brasil"],
     ["2027-10-12", "Nossa Senhora Aparecida"], ["2027-11-02", "Finados"], ["2027-11-15", "Proclamação da República"],
     ["2027-11-20", "Dia da Consciência Negra"], ["2027-12-08", "Nossa Senhora da Conceição (Campinas)"], ["2027-12-25", "Natal"]
   ];
@@ -2217,7 +2230,7 @@
       if (e.pointerType !== "mouse") return;
       mx = e.clientX; my = e.clientY;
       // Na tela de login fica o cursor normal do sistema; a animação volta depois de entrar.
-      if (!$("gate").hidden || $("privDialog").open) { document.body.classList.remove("has-cursor"); return; }
+      if (!$("gate").hidden || document.querySelector("dialog[open]")) { document.body.classList.remove("has-cursor"); return; }
       document.body.classList.add("has-cursor");
       dot.style.transform = "translate(" + mx + "px," + my + "px)";
       var t = e.target.closest && e.target.closest("a, button, .day, label, summary, select");
@@ -2287,7 +2300,10 @@
     var lbl = view.querySelector(".page-head .label");
     if (lbl && animate) scramble(lbl);
     if (v === "inicio" || v === "perfil") view.querySelectorAll(".stat .v").forEach(odometer);
-    if (v === "campus") { if (!C3.built) { C3.built = true; buildCampus3D(); if (C3.ready && curZone) C3.focus(curZone.id, false); } else if (C3.kick) C3.kick(); }
+    if (v === "campus") {
+      if (!C3.built) { C3.built = true; loadThree(function () { buildCampus3D(); if (C3.ready && curZone) C3.focus(curZone.id, false); }); }
+      else if (C3.kick) C3.kick();
+    }
     requestAnimationFrame(function () { armReveals(view); onScroll(); });
   }
 
@@ -3048,6 +3064,76 @@
     $("privClose").addEventListener("click", close); $("privOk").addEventListener("click", close);
     d.addEventListener("click", function (e) { if (e.target === d) close(); });
     d.addEventListener("close", function () { if (opener) opener.focus(); });
+  })();
+
+  /* ---------- Dar opinião (sugestões e problemas) ---------- */
+  (function () {
+    var d = $("fbDialog"), fab = $("fbOpen"), form = $("fbForm"), FB_KEY = "portalFuturo.fb";
+    if (!CLOUD) { fab.hidden = true; return; }
+    function sentLog() { var a = readJSON(localStorage, FB_KEY); return Array.isArray(a && a.t) ? a.t.filter(function (x) { return typeof x === "number" && Date.now() - x < 36e5; }) : []; }
+    function resetForm() {
+      form.reset(); $("fbErr").textContent = ""; $("fbCount").textContent = "0 de 1000";
+      var logged = currentUser && currentUser.cloud && currentUser.email;
+      $("fbReplyTxt").textContent = logged ? "Pode me responder no e-mail " + currentUser.email : "Quero receber resposta por e-mail";
+      $("fbMailWrap").hidden = true;
+      var done = d.querySelector(".fb-done"); if (done) done.remove();
+      d.querySelector(".fb-body").hidden = false; d.querySelector(".priv-foot").hidden = false;
+    }
+    function open() {
+      resetForm(); document.body.classList.remove("has-cursor");
+      if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
+      setTimeout(function () { $("fbMsg").focus(); }, 30);
+    }
+    function close() { if (d.open) d.close(); }
+    fab.addEventListener("click", open);
+    $("fbClose").addEventListener("click", close); $("fbCancel").addEventListener("click", close);
+    d.addEventListener("click", function (e) { if (e.target === d) close(); });
+    d.addEventListener("close", function () { fab.focus(); });
+    $("fbMsg").addEventListener("input", function () { $("fbCount").textContent = $("fbMsg").value.length + " de 1000"; if ($("fbMsg").value.length >= 5) $("fbErr").textContent = ""; });
+    $("fbMail").addEventListener("input", function () { $("fbErr").textContent = ""; });
+    $("fbReply").addEventListener("change", function () {
+      var logged = currentUser && currentUser.cloud && currentUser.email;
+      $("fbMailWrap").hidden = !$("fbReply").checked || !!logged;
+      if (!$("fbMailWrap").hidden) $("fbMail").focus();
+    });
+    d.querySelectorAll('input[name="fbKind"]').forEach(function (r) {
+      r.addEventListener("change", function () {
+        $("fbMsgLbl").textContent = r.value === "problema" ? "O que aconteceu? Conte o que você fez antes do problema" : r.value === "elogio" ? "O que você gostou?" : "Sua mensagem";
+      });
+    });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var err = $("fbErr"), btn = $("fbSend");
+      var kind = (d.querySelector('input[name="fbKind"]:checked') || {}).value || "sugestao";
+      var msg = str($("fbMsg").value, 1000).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+      if (msg.length < 5) { err.textContent = "Escreva pelo menos algumas palavras."; $("fbMsg").focus(); return; }
+      var contact = null, logged = currentUser && currentUser.cloud && currentUser.email;
+      if ($("fbReply").checked) {
+        contact = logged ? currentUser.email : str($("fbMail").value, 120).trim().toLowerCase();
+        if (!EMAIL_RE.test(contact)) { err.textContent = "Digite um e-mail válido para a resposta, ou desmarque a opção."; $("fbMail").focus(); return; }
+      }
+      var log = sentLog();
+      if (log.length && Date.now() - log[log.length - 1] < 60000) { err.textContent = "Você acabou de enviar uma mensagem. Aguarde um minuto para mandar outra."; return; }
+      if (log.length >= 5) { err.textContent = "Você já enviou várias mensagens nesta hora. Obrigado! Tente de novo mais tarde."; return; }
+      var finish = function () {
+        log.push(Date.now()); writeJSON(localStorage, FB_KEY, { t: log });
+        d.querySelector(".fb-body").hidden = true; d.querySelector(".priv-foot").hidden = true;
+        var box = el("div", { class: "fb-done", role: "status" }, [
+          el("span", { class: "ib" }, []),
+          el("h3", { text: "Mensagem enviada. Obrigado!" }),
+          el("p", { class: "muted", text: contact ? "Sua opinião chegou ao criador do portal. Se precisar, a resposta vai para " + contact + "." : "Sua opinião chegou ao criador do portal e ajuda a deixar tudo melhor." }),
+          el("button", { class: "btn", type: "button", text: "Fechar", onclick: close })
+        ]);
+        var ns = "http://www.w3.org/2000/svg", sv = document.createElementNS(ns, "svg"), u = document.createElementNS(ns, "path");
+        sv.setAttribute("class", "ico"); sv.setAttribute("viewBox", "0 0 24 24"); u.setAttribute("d", "M5 12l5 5 9-10"); sv.appendChild(u); box.firstChild.appendChild(sv);
+        form.appendChild(box); box.querySelector("button").focus();
+      };
+      if (str($("fbSite").value, 50)) { finish(); return; } // campo-armadilha preenchido: provável robô
+      var body = { kind: kind, message: msg, page: /^[a-z-]{1,30}$/.test(currentView || "") ? currentView : null, contact: contact };
+      busy(btn, true, "Enviando…"); err.textContent = "";
+      var req = logged && sbSess ? sbAuthed("POST", "/rest/v1/feedback", body, "return=minimal") : sbReq("POST", "/rest/v1/feedback", body, { prefer: "return=minimal" });
+      req.then(function () { busy(btn, false, "Enviar"); finish(); }, function (er) { busy(btn, false, "Enviar"); err.textContent = cloudMsg(er, "Não foi possível enviar agora. Tente de novo em instantes."); });
+    });
   })();
 
   /* ---------- Inicialização ---------- */

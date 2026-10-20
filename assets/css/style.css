@@ -1161,3 +1161,5 @@ body[data-page="perfil"] :is(.scope-dark,.topbar){--tone:var(--plum)}
 @media (max-width:600px){ .priv-head,.priv-body,.priv-foot{padding-left:18px;padding-right:18px} .priv-dialog{max-height:92vh} }
 .priv-dialog .priv-foot{background:transparent;margin:0;padding:14px 28px 20px;border-top:1px solid var(--line);color:inherit}
 @media (max-width:600px){ .priv-dialog .priv-foot{padding-left:18px;padding-right:18px} }
+.gate-gnote{margin:-6px 0 0;text-align:center;font-size:.8rem}
+.gate-gnote .link-btn{font-size:inherit}

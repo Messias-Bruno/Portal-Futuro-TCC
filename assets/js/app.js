@@ -2621,7 +2621,7 @@
   function setupCloudUI() {
     $("forgotBtn").hidden = false;
     var g = CFG.google === true && HTTP;
-    $("googleBtn").hidden = !g; $("googleBtn2").hidden = !g; $("suOr").hidden = !g;
+    $("googleBtn").hidden = !g; $("googleBtn2").hidden = !g; $("suOr").hidden = !g; $("gNote1").hidden = !g; $("gNote2").hidden = !g;
     $("suTermsTxt").textContent = "Li e concordo com a política de privacidade: o Portal Futuro guarda meu nome, meu e-mail e o que eu cadastrar, só para o portal funcionar. Posso apagar tudo quando quiser, no meu perfil.";
     $("footDataTxt").textContent = "Os dados da sua conta ficam guardados com segurança no servidor do portal, e só você tem acesso a eles. A conta de demonstração fica só neste navegador. O portal nunca pede CPF nem dados bancários.";
     $("suHeadTxt").textContent = "É gratuito e leva menos de um minuto. Você acessa de qualquer celular ou computador.";

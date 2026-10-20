@@ -6,5 +6,5 @@ window.PF_CONFIG = {
   supabaseUrl: "https://baubfjqwrdyeqarmjjio.supabase.co",
   supabaseKey: "sb_publishable_G_OyvQyWFSWfrLeO7cezYQ_RYkr0mHX",
   // Mude para true depois de ligar o login com Google no painel do Supabase
-  google: false
+  google: true
 };

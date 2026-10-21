@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.20 (20/10/2026):** na tela de entrada, o desenho do livro aberto virou a estrela-guia, com um brilho suave (parado para quem prefere menos movimento).
 - **v1.19 (20/10/2026):** cartões de capítulo da página inicial numerados de 01 a 06 (antes 100 a 600, que davam a impressão de serem quantidades).
 - **v1.18 (20/10/2026):** códigos 100 a 600 retirados dos cartões de capítulo (versão substituída pela v1.19).
 - **v1.17 (20/10/2026):** a estrela-guia substitui o livro aberto em toda a identidade: imagem de compartilhamento (`og-cover.jpg`) e página "não encontrada" (agora "Esta página saiu da rota.").

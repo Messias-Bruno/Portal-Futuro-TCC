@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.18 (20/10/2026):** retirados os códigos 100 a 600 dos cartões de capítulo na página inicial, que davam a impressão de serem quantidades.
 - **v1.17 (20/10/2026):** a estrela-guia substitui o livro aberto em toda a identidade: imagem de compartilhamento (`og-cover.jpg`) e página "não encontrada" (agora "Esta página saiu da rota.").
 - **v1.16 (20/10/2026):** novo ícone do site e do aplicativo: estrela-guia sobre um céu de amanhecer (`favicon.svg` e os ícones PNG do aplicativo, com versão "maskable" para Android).
 - **v1.15 (20/10/2026):** instalar como aplicativo no celular e no computador (PWA: `manifest.webmanifest`, `sw.js`, ícones), com passo a passo para iPhone; página "não encontrada" (`404.html`); botões para levar provas e agenda ao Google Agenda (arquivo `.ics`, com lembrete); cronômetro de estudo (Pomodoro 25/5/15) no Planejamento; revisão de acessibilidade (contraste das cores, link "Pular para o conteúdo", foco visível no teclado); seção "Números do portal" no perfil, só para o dono, com totais sem dados pessoais (`supabase/numeros.sql`).

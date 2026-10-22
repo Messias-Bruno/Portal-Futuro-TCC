@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.22 (22/10/2026):** quem já tem conta conectada entra direto no portal: aparece só uma tela rápida de carregamento (estrela e nome do portal) enquanto a conta é conferida, sem passar pela tela de login. Sem conta, o carregamento some na hora e abre o login.
 - **v1.21 (22/10/2026):** versão de celular com cara de aplicativo (só até 760 px; o computador não muda): barra de abas embaixo (Início, Guia, Ferramentas, Agenda, Perfil) com painéis que sobem de baixo; vídeo da abertura em bloco quadrado no topo, mostrando bem mais da cena; topo dos capítulos compacto; conteúdo em estilo lista, sem caixas dentro de caixas; tabelas viram cartões; linhas de ônibus e campus 3D com a largura toda. Capítulos numerados 01 a 06 também no topo de cada página. Notificações no aplicativo instalado (só contas com login): finanças todo dia 5, ENEM, Unicamp e as provas e compromissos do aluno 7 dias e 1 dia antes, e novidades do portal. Envio diário às 9h pela função `push` (Supabase Edge Function, `supabase/functions/push`) com pg_cron; tabelas e funções em `supabase/notificacoes.sql`. Política de privacidade atualizada.
 - **v1.20 (20/10/2026):** na tela de entrada, o desenho do livro aberto virou a estrela-guia, com um brilho suave (parado para quem prefere menos movimento).
 - **v1.19 (20/10/2026):** cartões de capítulo da página inicial numerados de 01 a 06 (antes 100 a 600, que davam a impressão de serem quantidades).

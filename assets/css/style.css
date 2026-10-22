@@ -1389,3 +1389,16 @@ body.locked .skip-link{display:none}
 .push-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .push-actions .btn .ico{width:18px;height:18px}
 @media (max-width:760px){ .push-list{background:var(--card-solid);box-shadow:inset 0 0 0 1px var(--line)} .push-sw{padding:14px 16px} }
+
+/* Carregamento rápido (antes de abrir a conta já conectada) */
+.splash{position:fixed;inset:0;z-index:250;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 120%,#6B3B33 0%,#0B3550 45%,#00283F 75%);color:#F6F3EC;transition:opacity .35s ease}
+.splash[hidden]{display:none}
+.splash.out{opacity:0;pointer-events:none}
+.splash-in{display:flex;flex-direction:column;align-items:center;gap:18px}
+.splash-star{width:58px;height:75px;fill:#F6F3EC;animation:splash-pulse 1.6s ease-in-out infinite}
+.splash-name{font-family:var(--font-display);font-size:2rem;letter-spacing:-.01em}
+.splash-bar{display:block;width:120px;height:3px;border-radius:2px;background:rgb(255 255 255 / .15);overflow:hidden}
+.splash-bar span{display:block;width:40%;height:100%;border-radius:2px;background:#E8CF86;animation:splash-load 1.1s ease-in-out infinite}
+@keyframes splash-pulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
+@keyframes splash-load{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+@media (prefers-reduced-motion: reduce){.splash-star,.splash-bar span{animation:none}}

@@ -2837,11 +2837,19 @@
     });
     // menu da conta
     initProfile();
-    // sessão existente?
+    // sessão existente? Com conta conectada, o portal abre direto (só a tela rápida de carregamento aparece)
+    var splash = $("splash"), splashDone = false;
+    function hideSplash() {
+      if (splashDone) return; splashDone = true;
+      if (reduceMotion) { splash.hidden = true; return; }
+      splash.classList.add("out"); setTimeout(function () { splash.hidden = true; }, 380);
+    }
+    setTimeout(function () { if (!splashDone) { if (!currentUser) showGate(); hideSplash(); } }, 12000); // nunca fica preso no carregamento
     function localStart() {
       var u = getSession();
       if (u) { loadUserData(u); applyUser(u); $("gate").hidden = true; lockPage(false); }
       else showGate();
+      hideSplash();
     }
     if (CLOUD) {
       setupCloudUI();
@@ -2849,16 +2857,17 @@
       sbHandleReturn().then(function (ret) {
         if (ret && ret.error) { localStart(); if (!currentUser) fieldErr(null, $("liMsg"), ret.error); return; }
         if (!sbSess) { localStart(); return; }
-        if (ret && ret.type === "recovery") { showGate(); showExtraForm("formReset"); return; }
-        showGate(); okMsg($("liMsg"), "Entrando na sua conta…");
+        if (ret && ret.type === "recovery") { showGate(); showExtraForm("formReset"); hideSplash(); return; }
         return sbLoadUser().then(function (u) {
-          $("liMsg").textContent = "";
           enterSite(u, !!(ret && ret.type === "signup"), !ret);
+          hideSplash();
         }, function (e) {
           if (e.status === 401 || e.status === 403) { sbSess = null; sbStore(null); }
+          showGate();
           fieldErr(null, $("liMsg"), e.code === "network" ? cloudMsg(e) : "Entre de novo para continuar.");
+          hideSplash();
         });
-      });
+      }).catch(function () { if (!currentUser) showGate(); hideSplash(); });
     } else localStart();
     // outra aba saiu da conta
     window.addEventListener("storage", function (e) {

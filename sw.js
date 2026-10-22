@@ -3,7 +3,7 @@
    Sem internet, a última cópia guardada (os guias continuam abrindo).
    Nada de outros sites é guardado (Supabase, vídeo, fontes).
    Também mostra as notificações do aplicativo instalado (lembretes e novidades). */
-var CACHE = "portal-futuro-v5";
+var CACHE = "portal-futuro-v6";
 var SHELL = ["/", "/index.html", "/assets/css/style.css", "/assets/js/app.js", "/assets/js/config.js", "/assets/img/favicon.svg", "/assets/img/icon-192.png", "/manifest.webmanifest", "/404.html", "/assets/css/404.css"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
@@ -36,7 +36,6 @@ self.addEventListener("push", function (e) {
   var title = String(d.title || "Portal Futuro").slice(0, 80);
   e.waitUntil(self.registration.showNotification(title, {
     body: String(d.body || "").slice(0, 200),
-    icon: "/assets/img/icon-192.png",
     badge: "/assets/img/badge-96.png",
     tag: typeof d.tag === "string" ? d.tag.slice(0, 60) : undefined,
     lang: "pt-BR",

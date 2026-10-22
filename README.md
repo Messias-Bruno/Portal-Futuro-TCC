@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.25 (22/10/2026):** Configurações (ícone de engrenagem ao lado do tema): tema automático, claro ou escuro, tamanho do texto, menos animações, sons, vibração ao tocar, notificações, conta, privacidade, dar opinião, instalar o aplicativo, limpar dados do aparelho e versão. Sons suaves criados pelo próprio navegador ao tocar nos ícones e ao abrir o portal, e uma marcação leve nos ícones tocados (no celular e no computador). No celular, telas com menos rolagem: a página inicial mostra só o essencial (caderno, atalhos em grade, capítulos deslizando, relógio e próximos compromissos) e cada página vira uma lista de assuntos; tocando num assunto, ele abre numa tela própria com voltar. O botão "Dar opinião" do celular foi para as Configurações. O computador mantém a mesma estrutura.
 - **v1.24 (22/10/2026):** notificações sem a imagem grande da estrela à direita (o ícone do aplicativo já aparece à esquerda).
 - **v1.23 (22/10/2026):** no aplicativo instalado, quem tem conta vê um pedido "Quer receber lembretes?" logo depois de entrar, com os botões Ativar e Agora não. "Agora não" volta a perguntar só depois de 7 dias; quem já ativou ou bloqueou as notificações não é mais perguntado.
 - **v1.22 (22/10/2026):** quem já tem conta conectada entra direto no portal: aparece só uma tela rápida de carregamento (estrela e nome do portal) enquanto a conta é conferida, sem passar pela tela de login. Sem conta, o carregamento some na hora e abre o login.

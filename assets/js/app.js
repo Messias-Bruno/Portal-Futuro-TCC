@@ -50,7 +50,26 @@
     var t = $("toast"); t.textContent = msg; t.hidden = false;
     clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 2600);
   }
-  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Preferências deste aparelho (Configurações): sons, vibração, tamanho do texto e menos animações
+  var PREF_KEY = "portalFuturo.prefs";
+  var prefs = (function () {
+    var p = { sound: true, vib: true, text: "md", calm: false };
+    try {
+      var j = JSON.parse(localStorage.getItem(PREF_KEY) || "null");
+      if (j && typeof j === "object") {
+        if (typeof j.sound === "boolean") p.sound = j.sound;
+        if (typeof j.vib === "boolean") p.vib = j.vib;
+        if (["md", "lg", "xl"].indexOf(j.text) >= 0) p.text = j.text;
+        if (typeof j.calm === "boolean") p.calm = j.calm;
+      }
+    } catch (e) {}
+    return p;
+  })();
+  function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (e) {} }
+  var motionMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var reduceMotion = motionMQ.matches || prefs.calm;
+  document.documentElement.setAttribute("data-text", prefs.text);
+  document.documentElement.classList.toggle("calm", prefs.calm);
 
   /* ---------- Dados (salvos só neste navegador) ---------- */
   var KEY = "portalFuturo.v1";
@@ -320,10 +339,18 @@
     closeMenu();
     if (token === "privacidade") { openPrivacy(); if (!currentView) show("inicio", false); return; } // endereço direto da política (portal-futuro.netlify.app/#privacidade)
     if (VIEWS.indexOf(token) >= 0) {
+      if (typeof setDetail === "function") setDetail(null);
       show(token, animate);
       window.scrollTo({ top: 0, behavior: "auto" });
       return;
     }
+    if (SECTION_VIEW[token] && typeof setDetail === "function" && phoneMQ.matches && $(token) && $(token).classList.contains("m-sub")) {
+      show(SECTION_VIEW[token], animate);
+      setDetail(token);
+      window.scrollTo({ top: 0, behavior: "auto" });
+      return;
+    }
+    if (typeof setDetail === "function") setDetail(null);
     if (SECTION_VIEW[token]) {
       var switched = show(SECTION_VIEW[token], animate);
       var sec = $(token);
@@ -2645,7 +2672,7 @@
     loadUserData(u);
     applyUser(u);
     var g = $("gate");
-    var done = function () { g.hidden = true; g.classList.remove("leaving"); lockPage(false); var cv = $("p-" + currentView); if (cv) syncVideos(cv); if (C3.kick) C3.kick(); setTimeout(maybeAskPush, 2500); };
+    var done = function () { g.hidden = true; g.classList.remove("leaving"); lockPage(false); var cv = $("p-" + currentView); if (cv) syncVideos(cv); if (C3.kick) C3.kick(); setTimeout(maybeAskPush, 2500); Sfx.open(); };
     if (quiet) { done(); return; }
     if (reduceMotion) done(); else { g.classList.add("leaving"); setTimeout(done, 700); }
     setTimeout(function () {
@@ -3338,6 +3365,177 @@
       toast(r.count + (r.count === 1 ? " data enviada" : " datas enviadas") + " para a agenda. Abra o arquivo baixado para adicionar.");
     });
   });
+
+  /* ---------- Sons suaves (criados na hora pelo navegador, sem arquivos de áudio) ---------- */
+  var Sfx = (function () {
+    var ctx = null;
+    function ac() {
+      if (!ctx) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try { ctx = new C(); } catch (e) { return null; } }
+      if (ctx.state === "suspended") { try { ctx.resume(); } catch (e) {} }
+      return ctx;
+    }
+    function tone(f1, f2, dur, vol, delay) {
+      var c = ac(); if (!c || c.state !== "running") return false;
+      var t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(f1, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+      return true;
+    }
+    return {
+      tap: function () { if (prefs.sound) tone(880, 620, 0.07, 0.03); },
+      toggle: function (on) { if (prefs.sound) { tone(on ? 660 : 880, on ? 990 : 590, 0.09, 0.03); } },
+      open: function () {
+        if (!prefs.sound) return;
+        var go = function () { tone(523.25, 0, 0.55, 0.035, 0); tone(783.99, 0, 0.6, 0.03, 0.11); tone(1046.5, 0, 0.75, 0.022, 0.22); };
+        var c = ac(); if (!c) return;
+        if (c.state === "running") go();
+        else if (c.resume) c.resume().then(function () { if (c.state === "running") go(); }).catch(function () {});
+      }
+    };
+  })();
+  // Toque nos ícones: som, vibração curta e uma marcação leve
+  var TAP_SEL = ".tabbar a, .tabbar button, .round-btn, .btn, .glass-btn, .tile, .sheet-item, .set-row, .set-acc, .stat, .stack-card, .mainnav a, .mainnav button, .drop-panel a, .m-row, .m-back, .m-chap, .seg button, .user-chip, .fb-fab, .plan-go, .bus-head, .pa-act button";
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target.closest(TAP_SEL) : null;
+    if (!t || t.disabled) return;
+    Sfx.tap();
+    if (prefs.vib && navigator.vibrate) { try { navigator.vibrate(8); } catch (er) {} }
+    if (!reduceMotion) {
+      var ic = t.querySelector(".ico, .ib") || t;
+      ic.classList.remove("pop"); void ic.offsetWidth; ic.classList.add("pop");
+      setTimeout(function () { ic.classList.remove("pop"); }, 400);
+    }
+  }, true);
+  document.addEventListener("change", function (e) { if (e.target && e.target.matches && e.target.matches('input[type=checkbox][role=switch]')) { Sfx.toggle(e.target.checked); if (prefs.vib && navigator.vibrate) { try { navigator.vibrate(8); } catch (er) {} } } }, true);
+
+  /* ---------- Configurações ---------- */
+  var setEl = $("settings"), setBtn = $("setBtn"), setOpen = false, clearArm = 0;
+  function themeMode() { return root.getAttribute("data-theme") || "auto"; }
+  function paintSeg(id, val) { document.querySelectorAll("#" + id + " button").forEach(function (b) { var on = b.dataset.v === val; b.setAttribute("aria-checked", String(on)); b.classList.toggle("on", on); b.tabIndex = on ? 0 : -1; }); }
+  function setPushStatus() {
+    var st = $("setPushSt");
+    if (!(typeof PUSH_OK !== "undefined" && PUSH_OK)) { st.textContent = "Este aparelho não recebe notificações"; return; }
+    if (!isStandalone()) { st.textContent = "Funcionam no aplicativo instalado"; return; }
+    if (!currentUser || !currentUser.cloud) { st.textContent = "Entre com uma conta para receber"; return; }
+    if (Notification.permission === "denied") { st.textContent = "Bloqueadas nas configurações do celular"; return; }
+    navigator.serviceWorker.ready.then(function (r) { return r.pushManager.getSubscription(); }).then(function (sub) { st.textContent = sub && Notification.permission === "granted" ? "Ligadas neste aparelho" : "Desligadas"; }).catch(function () { st.textContent = "Desligadas"; });
+  }
+  function fillSettings() {
+    var u = currentUser;
+    $("setAv").textContent = u ? initials(u.name) : "?";
+    $("setName").textContent = u ? u.name : "Visitante";
+    $("setMail").textContent = u ? (u.email === DEMO.email ? "Conta de demonstração" : u.email) : "";
+    paintSeg("setTheme", themeMode()); paintSeg("setText", prefs.text);
+    $("setCalm").checked = prefs.calm; $("setSound").checked = prefs.sound; $("setVib").checked = prefs.vib;
+    $("setVibRow").hidden = !navigator.vibrate;
+    $("setInstall").hidden = !!(isStandalone() || $("installWrap").hidden);
+    $("setLogout").hidden = !u;
+    var cloud = !!(u && u.cloud);
+    $("setClearD").textContent = cloud ? "Apaga a cópia guardada aqui e baixa tudo de novo da nuvem." : "Disponível para contas na nuvem. A demonstração guarda tudo só neste aparelho.";
+    $("setClear").disabled = !cloud;
+    $("setClearT").textContent = "Limpar dados do aparelho"; clearArm = 0;
+    setPushStatus();
+  }
+  function openSettings() {
+    fillSettings(); setOpen = true; setEl.hidden = false; setBtn.setAttribute("aria-expanded", "true");
+    document.body.classList.add("sheet-open");
+    requestAnimationFrame(function () { setEl.classList.add("open"); var f = setEl.querySelector(".set-head .round-btn"); if (f) f.focus({ preventScroll: true }); });
+  }
+  function closeSettings(keepFocus) {
+    if (!setOpen) return; setOpen = false; setEl.classList.remove("open"); setBtn.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("sheet-open");
+    if (!keepFocus) setBtn.focus({ preventScroll: true });
+    setTimeout(function () { if (!setOpen) setEl.hidden = true; }, reduceMotion ? 0 : 300);
+  }
+  setBtn.addEventListener("click", function () { if (setOpen) closeSettings(); else { closeSheet(true); openSettings(); } });
+  setEl.querySelectorAll("[data-set-close]").forEach(function (b) { b.addEventListener("click", function () { closeSettings(); }); });
+  setEl.querySelectorAll("[data-set-nav], [data-priv]").forEach(function (a) { a.addEventListener("click", function () { closeSettings(true); }); });
+  setEl.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { e.preventDefault(); closeSettings(); return; }
+    if (e.key !== "Tab") return;
+    var f = Array.prototype.filter.call(setEl.querySelectorAll("a[href],button:not([disabled]),input"), function (x) { return x.offsetParent !== null; });
+    if (!f.length) return; var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  (function () { // arrastar para baixo fecha (celular)
+    var panel = setEl.querySelector(".set-panel"), y0 = null, dy = 0;
+    panel.addEventListener("touchstart", function (e) { if (panel.scrollTop > 0) { y0 = null; return; } y0 = e.touches[0].clientY; dy = 0; }, { passive: true });
+    panel.addEventListener("touchmove", function (e) { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); panel.style.transform = dy ? "translateY(" + dy + "px)" : ""; }, { passive: true });
+    panel.addEventListener("touchend", function () { if (y0 === null) return; panel.style.transform = ""; if (dy > 100) closeSettings(); y0 = null; });
+  })();
+  function segKeys(id, onPick) {
+    var g = $(id);
+    g.addEventListener("click", function (e) { var b = e.target.closest("button[data-v]"); if (b) onPick(b.dataset.v); });
+    g.addEventListener("keydown", function (e) {
+      if (["ArrowLeft", "ArrowRight"].indexOf(e.key) < 0) return; e.preventDefault();
+      var bs = Array.prototype.slice.call(g.querySelectorAll("button")), i = bs.indexOf(document.activeElement); if (i < 0) i = 0;
+      var n = bs[(i + (e.key === "ArrowRight" ? 1 : bs.length - 1)) % bs.length]; onPick(n.dataset.v); n.focus();
+    });
+  }
+  segKeys("setTheme", function (v) {
+    var apply = function () {
+      if (v === "auto") { root.removeAttribute("data-theme"); try { localStorage.removeItem(THEME_KEY); } catch (e) {} }
+      else { root.setAttribute("data-theme", v); try { localStorage.setItem(THEME_KEY, v); } catch (e) {} }
+      themeLabel(); if (C3.repaint) C3.repaint(); paintSeg("setTheme", v);
+    };
+    if (document.startViewTransition && !reduceMotion) document.startViewTransition(apply); else apply();
+  });
+  segKeys("setText", function (v) { prefs.text = v; savePrefs(); root.setAttribute("data-text", v); paintSeg("setText", v); });
+  $("setCalm").addEventListener("change", function () {
+    prefs.calm = this.checked; savePrefs(); reduceMotion = motionMQ.matches || prefs.calm; root.classList.toggle("calm", prefs.calm);
+    document.querySelectorAll("video").forEach(function (v) { try { if (reduceMotion) v.pause(); } catch (e) {} });
+    if (!reduceMotion) { var cv = $("p-" + currentView); if (cv) syncVideos(cv); }
+  });
+  $("setSound").addEventListener("change", function () { prefs.sound = this.checked; savePrefs(); if (prefs.sound) Sfx.tap(); });
+  $("setVib").addEventListener("change", function () { prefs.vib = this.checked; savePrefs(); if (prefs.vib && navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} } });
+  $("setLogout").addEventListener("click", function () { closeSettings(true); $("pfLogout").click(); });
+  $("setFb").addEventListener("click", function () { closeSettings(true); setTimeout(function () { $("fbOpen").click(); }, 50); });
+  $("setInstall").addEventListener("click", function () { closeSettings(true); $("installBtn").click(); });
+  $("setClear").addEventListener("click", function () {
+    var u = currentUser; if (!u || !u.cloud) return;
+    var dirty = false; try { dirty = localStorage.getItem(CACHE + u.id + ".dirty") === "1"; } catch (e) {}
+    if (dirty) { toast("Ainda há alterações sendo salvas na nuvem. Tente de novo em alguns segundos."); pushNow(); return; }
+    if (Date.now() - clearArm > 5000) { clearArm = Date.now(); $("setClearT").textContent = "Toque de novo para confirmar"; return; }
+    try { localStorage.removeItem(CACHE + u.id); } catch (e) {}
+    var done = function () { location.reload(); };
+    if (window.caches && caches.keys) caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }).then(done, done); else done();
+  });
+
+  /* ---------- Celular: telas com menos rolagem ----------
+     Cada página mostra só o essencial e uma lista dos assuntos; tocando num assunto, ele abre numa tela própria com "voltar". */
+  var phoneMQ = window.matchMedia("(max-width: 760px)");
+  var INLINE = { financas: ["lancar", "resumo"], provas: ["avaliacoes"], agenda: ["nova-atividade", "atividades"], calendario: ["agora", "mes", "dia"], onibus: ["planejar"], campus: ["mapa"], perfil: ["pf-resumo"] };
+  function svgUse(id, cls) { var s = document.createElementNS("http://www.w3.org/2000/svg", "svg"), u = document.createElementNS("http://www.w3.org/2000/svg", "use"); s.setAttribute("class", "ico " + (cls || "")); s.setAttribute("aria-hidden", "true"); u.setAttribute("href", "#" + id); s.appendChild(u); return s; }
+  document.querySelectorAll("section.view").forEach(function (view) {
+    var v = view.dataset.view, toc = view.querySelector(".toc"), body = view.querySelector(".page-body");
+    if (!toc || !body) return;
+    var inl = INLINE[v] || [], rows = [];
+    toc.querySelectorAll("li a").forEach(function (a) {
+      var id = a.getAttribute("href").slice(1), sec = document.getElementById(id);
+      if (!sec || sec.parentNode !== body || inl.indexOf(id) >= 0) return;
+      sec.classList.add("m-sub");
+      var n = a.querySelector(".n"), t = a.querySelector(".t"), d = a.querySelector(".d");
+      rows.push(el("li", null, [el("a", { class: "m-row", href: "#" + id }, [el("span", { class: "n", text: n ? n.textContent : "" }), el("span", { class: "t" }, [el("b", { text: t ? t.textContent : "" }), d ? el("span", { class: "d", text: d.textContent }) : null]), svgUse("i-chev", "chev")])]));
+    });
+    if (!rows.length) return;
+    var nav = el("nav", { class: "m-index", "aria-label": "Assuntos desta página" }, [el("h2", { class: "m-index-h", text: inl.length ? "Mais nesta página" : "Assuntos" }), el("ol", null, rows)]);
+    var last = null; inl.forEach(function (id) { var s2 = $(id); if (s2 && s2.parentNode === body) last = s2; });
+    if (last) body.insertBefore(nav, last.nextSibling); else body.insertBefore(nav, body.firstChild);
+    var h1 = view.querySelector(".page-head h1");
+    var inner = view.querySelector(".view-inner");
+    if (inner) inner.insertBefore(el("a", { class: "m-back", href: "#" + v }, [svgUse("i-left"), el("span", { text: h1 ? h1.textContent : "Voltar" })]), inner.firstChild);
+  });
+  function setDetail(id) {
+    document.querySelectorAll(".view.m-detail").forEach(function (x) { x.classList.remove("m-detail"); });
+    document.querySelectorAll(".sec.m-open").forEach(function (x) { x.classList.remove("m-open"); });
+    document.body.classList.remove("m-detail-on");
+    if (!id) return false;
+    var s = $(id); if (!s || !s.classList.contains("m-sub")) return false;
+    s.classList.add("m-open"); s.closest(".view").classList.add("m-detail"); document.body.classList.add("m-detail-on");
+    return true;
+  }
 
   /* ---------- Notificações (só no aplicativo instalado e com conta na nuvem) ----------
      O navegador cria uma "inscrição" (endereço do serviço de push + chaves públicas). Ela vai para o

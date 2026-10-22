@@ -176,7 +176,54 @@
     document.body.style.overflow = open ? "hidden" : "";
   }
   menuBtn.addEventListener("click", function () { setMenu(!mobileNav.classList.contains("open")); });
-  function closeMenu() { setMenu(false); closeGuide(); }
+  function closeMenu() { setMenu(false); closeGuide(); closeSheet(); }
+
+  /* ---------- Barra de abas e painéis de baixo (só no celular) ---------- */
+  var openSheetEl = null, sheetOpener = null;
+  function openSheet(id, opener) {
+    var sh = $(id); if (!sh) return;
+    if (openSheetEl && openSheetEl !== sh) closeSheet(true);
+    openSheetEl = sh; sheetOpener = opener || null;
+    sh.hidden = false; document.body.classList.add("sheet-open");
+    if (opener) opener.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(function () { sh.classList.add("open"); var f = sh.querySelector(".sheet-item"); if (f) f.focus({ preventScroll: true }); });
+  }
+  function closeSheet(keepFocus) {
+    var sh = openSheetEl; if (!sh) return;
+    openSheetEl = null; sh.classList.remove("open"); document.body.classList.remove("sheet-open");
+    if (sheetOpener) { sheetOpener.setAttribute("aria-expanded", "false"); if (!keepFocus && sh.contains(document.activeElement)) sheetOpener.focus({ preventScroll: true }); }
+    setTimeout(function () { if (!sh.classList.contains("open")) sh.hidden = true; }, reduceMotion ? 0 : 280);
+  }
+  document.querySelectorAll("#tabbar [data-sheet]").forEach(function (b) {
+    b.setAttribute("aria-expanded", "false");
+    b.addEventListener("click", function () { if (openSheetEl && openSheetEl.id === b.dataset.sheet) closeSheet(); else openSheet(b.dataset.sheet, b); });
+  });
+  document.querySelectorAll(".sheet").forEach(function (sh) {
+    sh.querySelectorAll("[data-close]").forEach(function (c) { c.addEventListener("click", function () { closeSheet(); }); });
+    sh.querySelectorAll(".sheet-item").forEach(function (a) { a.addEventListener("click", function () { closeSheet(true); }); });
+    sh.addEventListener("keydown", function (e) {
+      if (e.key !== "Tab") return;
+      var f = sh.querySelectorAll("a[href],button:not([disabled])"); if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    // arrastar o painel para baixo fecha
+    var panel = sh.querySelector(".sheet-panel"), y0 = null, dy = 0;
+    panel.addEventListener("touchstart", function (e) { if (panel.scrollTop > 0) return; y0 = e.touches[0].clientY; dy = 0; }, { passive: true });
+    panel.addEventListener("touchmove", function (e) { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); panel.style.transform = dy ? "translateY(" + dy + "px)" : ""; }, { passive: true });
+    panel.addEventListener("touchend", function () { if (y0 === null) return; panel.style.transform = ""; if (dy > 90) closeSheet(); y0 = null; });
+  });
+  var TAB_OF = { inicio: "inicio", agenda: "agenda", perfil: "perfil", financas: "ferramentas", provas: "ferramentas", calendario: "ferramentas", onibus: "ferramentas", campus: "ferramentas" };
+  function syncTabs(v) {
+    var t = TAB_OF[v] || "guia";
+    document.querySelectorAll("#tabbar [data-tab]").forEach(function (a) {
+      var on = a.dataset.tab === t;
+      a.classList.toggle("on", on);
+      if (a.tagName === "A") { if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); }
+    });
+    document.querySelectorAll(".sheet-item").forEach(function (a) { if (a.getAttribute("href") === "#" + v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  }
   var guideBtn = $("guideBtn"), guidePanel = $("guidePanel");
   function closeGuide() { guidePanel.hidden = true; guideBtn.setAttribute("aria-expanded", "false"); }
   guideBtn.addEventListener("click", function (e) {
@@ -186,7 +233,7 @@
     guideBtn.setAttribute("aria-expanded", String(open));
   });
   document.addEventListener("click", function (e) { if (!guidePanel.hidden && !guidePanel.contains(e.target)) closeGuide(); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeGuide(); setMenu(false); } });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeGuide(); setMenu(false); closeSheet(); } });
 
   /* ---------- Relógio ao vivo ---------- */
   var fmtClockDate = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
@@ -258,6 +305,7 @@
       else a.removeAttribute("aria-current");
     });
     guideBtn.classList.toggle("has-current", !!guidePanel.querySelector('a[aria-current="page"]'));
+    syncTabs(v);
     updateSampleBar();
     if (v === "inicio") { renderHome(); if (window._pfReady) renderMini(); }
     if (v === "calendario" && window._pfReady) { renderCalendar(); renderDay(); renderFixed(); }
@@ -293,6 +341,16 @@
     if (document.startViewTransition && !reduceMotion && next !== currentView) {
       document.startViewTransition(function () { route(token, true); });
     } else route(token, true);
+  });
+
+  /* Tabelas: no celular cada linha vira um cartão; o rótulo da coluna vai em cada célula */
+  document.querySelectorAll(".table-wrap").forEach(function (w) {
+    var t = w.querySelector("table"); if (!t) return;
+    w.classList.add("stack");
+    var heads = Array.prototype.map.call(t.querySelectorAll("thead th"), function (h) { return h.textContent.trim(); });
+    t.querySelectorAll("tbody tr").forEach(function (tr) {
+      Array.prototype.forEach.call(tr.children, function (c, i) { if (c.tagName === "TD" && heads[i]) c.setAttribute("data-label", heads[i]); });
+    });
   });
 
   /* ---------- Exemplos ---------- */
@@ -425,9 +483,9 @@
       tb.appendChild(el("tr", null, [
         el("td", { class: "num", text: fmtDay.format(parseD(x.data)) }),
         el("td", { class: "desc" }, [x.desc + " ", exTag(x)]),
-        el("td", { text: x.cat }),
+        el("td", { class: "cat", text: x.cat }),
         el("td", { class: "money " + (x.tipo === "entrada" ? "pos" : "neg"), text: (x.tipo === "entrada" ? "+ " : "− ") + BRL.format(x.val) }),
-        el("td", null, [del])
+        el("td", { class: "act" }, [del])
       ]));
     });
     $("csvBox").hidden = true;
@@ -2439,6 +2497,7 @@
   }
   function sbSignOut() {
     var t = sbSess && sbSess.at;
+    if (t && typeof pushStop === "function") pushStop(t); // este aparelho para de receber avisos da conta que saiu
     if (t) sbReq("POST", "/auth/v1/logout?scope=local", null, { token: t }).catch(function () {});
     if (sbSess) { try { localStorage.removeItem(CACHE + sbSess.uid); localStorage.removeItem(CACHE + sbSess.uid + ".dirty"); } catch (e) {} }
     sbSess = null; sbStore(null); clearTimeout(syncT); cloudReady = false;
@@ -2557,7 +2616,7 @@
   try { var lk = readJSON(sessionStorage, "portalFuturo.lock"); if (lk) { fails = Number(lk.f) || 0; lockUntil = Number(lk.u) || 0; } } catch (e) {}
   function saveLock() { writeJSON(sessionStorage, "portalFuturo.lock", { f: fails, u: lockUntil }); }
 
-  var gateEls = ["sampleBar", "mobileNav", "main"].map(function (id) { return $(id); }).concat([document.querySelector(".topbar"), document.querySelector("footer")]).filter(Boolean);
+  var gateEls = ["sampleBar", "mobileNav", "tabbar", "sheetGuia", "sheetFerr", "main"].map(function (id) { return $(id); }).concat([document.querySelector(".topbar"), document.querySelector("footer")]).filter(Boolean);
   function lockPage(on) {
     document.body.classList.toggle("locked", on);
     gateEls.forEach(function (n) { if (on) n.setAttribute("inert", ""); else n.removeAttribute("inert"); if (on) n.setAttribute("aria-hidden", "true"); else n.removeAttribute("aria-hidden"); });
@@ -2898,6 +2957,7 @@
   function renderProfile() {
     if (!currentUser) return;
     loadPortalNumbers(false);
+    renderPush();
     // conta local: relê do armazenamento, assim os campos novos do perfil sempre existem e estão validados
     var u = currentUser.cloud ? currentUser : authStore().users.filter(function (x) { return x.id === currentUser.id; })[0];
     if (!u) return;
@@ -3267,6 +3327,92 @@
       document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
       toast(r.count + (r.count === 1 ? " data enviada" : " datas enviadas") + " para a agenda. Abra o arquivo baixado para adicionar.");
     });
+  });
+
+  /* ---------- Notificações (só no aplicativo instalado e com conta na nuvem) ----------
+     O navegador cria uma "inscrição" (endereço do serviço de push + chaves públicas). Ela vai para o
+     servidor pela função push_subscribe; o envio diário é feito pela função "push" na Supabase. */
+  var PUSH_OK = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  function isStandalone() { return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true; }
+  function b64uToBytes(str) {
+    var s = str.replace(/-/g, "+").replace(/_/g, "/"); s += "===".slice((s.length + 3) % 4);
+    var bin = atob(s), out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out;
+  }
+  function pushReg() { return navigator.serviceWorker.ready; }
+  function pushPrefs() { var p = {}; document.querySelectorAll("#pushList [data-pref]").forEach(function (c) { p[c.dataset.pref] = c.checked; }); return p; }
+  function pushUI(state, prefs) {
+    var lead = $("pushLead"), list = $("pushList"), on = $("pushOn"), off = $("pushOff"), inst = $("pushInstall");
+    list.hidden = state !== "active"; on.hidden = state !== "ready"; off.hidden = state !== "active";
+    inst.hidden = !(state === "install" && !$("installWrap").hidden);
+    var msg = {
+      unsupported: "Este aparelho não recebe notificações do portal.",
+      install: "As notificações funcionam no aplicativo instalado. Instale o Portal Futuro na tela inicial, abra por lá e ative aqui no perfil.",
+      local: "Para receber lembretes, entre com uma conta (a conta de demonstração não recebe notificações).",
+      denied: "As notificações estão bloqueadas para o Portal Futuro. Libere nas configurações do celular (Notificações) e volte aqui.",
+      ready: "Receba lembretes no celular: finanças todo dia 5, datas importantes com 7 dias e 1 dia de antecedência e novidades do portal.",
+      active: "Notificações ligadas neste aparelho. Escolha o que você quer receber:",
+      loading: "Conferindo as notificações deste aparelho…"
+    }[state];
+    lead.textContent = msg || "";
+    if (prefs) document.querySelectorAll("#pushList [data-pref]").forEach(function (c) { c.checked = prefs[c.dataset.pref] !== false; });
+  }
+  function renderPush() {
+    $("pushErr").textContent = "";
+    if (!PUSH_OK) return pushUI("unsupported");
+    if (!isStandalone()) return pushUI("install");
+    if (!currentUser || !currentUser.cloud) return pushUI("local");
+    if (Notification.permission === "denied") return pushUI("denied");
+    pushUI("loading");
+    pushReg().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+      if (!sub || Notification.permission !== "granted") return pushUI("ready");
+      return sbAuthed("POST", "/rest/v1/rpc/push_status", { p_endpoint: sub.endpoint }).then(function (st) {
+        if (st && st.active) pushUI("active", st.prefs); else pushUI("ready");
+      });
+    }).catch(function () { pushUI("ready"); });
+  }
+  $("pushInstall").addEventListener("click", function () { $("installBtn").click(); });
+  $("pushOn").addEventListener("click", function () {
+    var btn = this, err = $("pushErr"); err.textContent = ""; btn.disabled = true;
+    Notification.requestPermission().then(function (perm) {
+      if (perm !== "granted") { renderPush(); throw null; }
+      return Promise.all([pushReg(), fetch(SB_URL + "/functions/v1/push", { credentials: "omit", cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error("key"); return r.json(); })]);
+    }).then(function (res) {
+      var reg = res[0], key = res[1] && res[1].publicKey;
+      if (typeof key !== "string" || !/^[A-Za-z0-9_-]{80,100}$/.test(key)) throw new Error("key");
+      return reg.pushManager.getSubscription().then(function (old) { return old ? old.unsubscribe() : null; })
+        .then(function () { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(key) }); });
+    }).then(function (sub) {
+      var j = sub.toJSON();
+      return sbAuthed("POST", "/rest/v1/rpc/push_subscribe", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_prefs: { fin: true, datas: true, novidades: true } });
+    }).then(function () {
+      pushUI("active", { fin: true, datas: true, novidades: true });
+      toast("Notificações ativadas. O primeiro lembrete chega na próxima data importante.");
+    }).catch(function (e) {
+      if (e === null) return;
+      err.textContent = e && /too many/.test(e.message || "") ? "Sua conta já recebe notificações em 5 aparelhos. Desative em algum deles primeiro." : "Não foi possível ativar agora. Verifique a internet e tente de novo.";
+    }).then(function () { btn.disabled = false; });
+  });
+  document.querySelectorAll("#pushList [data-pref]").forEach(function (c) {
+    c.addEventListener("change", function () {
+      var err = $("pushErr"); err.textContent = "";
+      pushReg().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+        if (!sub) { renderPush(); return; }
+        return sbAuthed("POST", "/rest/v1/rpc/push_set_prefs", { p_endpoint: sub.endpoint, p_prefs: pushPrefs() });
+      }).catch(function () { c.checked = !c.checked; err.textContent = "Não foi possível salvar agora. Tente de novo."; });
+    });
+  });
+  function pushStop(token) {
+    if (!PUSH_OK) return Promise.resolve();
+    return pushReg().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+      if (!sub) return;
+      var ep = sub.endpoint;
+      var server = token ? sbReq("POST", "/rest/v1/rpc/push_unsubscribe", { p_endpoint: ep }, { token: token }) : sbAuthed("POST", "/rest/v1/rpc/push_unsubscribe", { p_endpoint: ep });
+      return server.catch(function () {}).then(function () { return sub.unsubscribe(); });
+    }).catch(function () {});
+  }
+  $("pushOff").addEventListener("click", function () {
+    var btn = this; btn.disabled = true;
+    pushStop().then(function () { btn.disabled = false; renderPush(); toast("Notificações desativadas neste aparelho."); });
   });
 
   /* ---------- Aplicativo (instalar na tela inicial) ---------- */

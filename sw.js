@@ -1,8 +1,9 @@
 /* Portal Futuro · service worker
    Rede primeiro: com internet, sempre a versão mais nova do site.
    Sem internet, a última cópia guardada (os guias continuam abrindo).
-   Nada de outros sites é guardado (Supabase, vídeo, fontes). */
-var CACHE = "portal-futuro-v2";
+   Nada de outros sites é guardado (Supabase, vídeo, fontes).
+   Também mostra as notificações do aplicativo instalado (lembretes e novidades). */
+var CACHE = "portal-futuro-v3";
 var SHELL = ["/", "/index.html", "/assets/css/style.css", "/assets/js/app.js", "/assets/js/config.js", "/assets/img/favicon.svg", "/assets/img/icon-192.png", "/manifest.webmanifest", "/404.html", "/assets/css/404.css"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
@@ -24,5 +25,32 @@ self.addEventListener("fetch", function (e) {
       if (req.mode === "navigate") return caches.match("/");
       return Response.error();
     });
+  }));
+});
+
+// Notificações: o servidor manda título, texto e a página que deve abrir (sempre deste site)
+function safeUrl(u) { return typeof u === "string" && /^\/[A-Za-z0-9#\/_-]*$/.test(u) ? u : "/"; }
+self.addEventListener("push", function (e) {
+  var d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data ? e.data.text() : "" }; }
+  var title = String(d.title || "Portal Futuro").slice(0, 80);
+  e.waitUntil(self.registration.showNotification(title, {
+    body: String(d.body || "").slice(0, 200),
+    icon: "/assets/img/icon-192.png",
+    badge: "/assets/img/badge-96.png",
+    tag: typeof d.tag === "string" ? d.tag.slice(0, 60) : undefined,
+    lang: "pt-BR",
+    data: { url: safeUrl(d.url) }
+  }));
+});
+self.addEventListener("notificationclick", function (e) {
+  e.notification.close();
+  var url = new URL(safeUrl(e.notification.data && e.notification.data.url), self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (list) {
+    for (var i = 0; i < list.length; i++) {
+      var c = list[i];
+      if (new URL(c.url).origin === self.location.origin && "focus" in c) { return c.focus().then(function (w) { return w && "navigate" in w ? w.navigate(url) : w; }); }
+    }
+    return self.clients.openWindow(url);
   }));
 });

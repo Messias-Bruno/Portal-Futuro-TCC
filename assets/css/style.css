@@ -1402,3 +1402,14 @@ body.locked .skip-link{display:none}
 @keyframes splash-pulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
 @keyframes splash-load{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
 @media (prefers-reduced-motion: reduce){.splash-star,.splash-bar span{animation:none}}
+
+/* Pedido de permissão para notificações (aplicativo instalado) */
+.push-ask{position:fixed;z-index:48;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(400px,calc(100% - 32px));display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;padding:18px;border-radius:22px;background:var(--card-solid);color:var(--fg);box-shadow:0 18px 50px rgb(0 0 0 / .28),inset 0 0 0 1px var(--line);opacity:0;transform:translateY(16px);transition:opacity .3s,transform .3s var(--ease)}
+.push-ask[hidden]{display:none}
+.push-ask.in{opacity:1;transform:none}
+.push-ask .ib{grid-row:span 2}
+.push-ask .pa-t b{display:block;font-weight:500;font-size:1rem;margin-bottom:4px}
+.push-ask .pa-t p{margin:0;font-size:.88rem;line-height:1.5;color:var(--muted-c)}
+.push-ask .pa-act{grid-column:2;display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+@media (max-width:760px){ .push-ask{left:10px;right:10px;width:auto;bottom:calc(var(--tab-h) + 10px + env(safe-area-inset-bottom,0px))} }
+@media (prefers-reduced-motion: reduce){ .push-ask{transition:none} }

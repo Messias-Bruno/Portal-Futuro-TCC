@@ -2497,6 +2497,7 @@
   }
   function sbSignOut() {
     var t = sbSess && sbSess.at;
+    var ask = $("pushAsk"); if (ask) { ask.classList.remove("in"); ask.hidden = true; }
     if (t && typeof pushStop === "function") pushStop(t); // este aparelho para de receber avisos da conta que saiu
     if (t) sbReq("POST", "/auth/v1/logout?scope=local", null, { token: t }).catch(function () {});
     if (sbSess) { try { localStorage.removeItem(CACHE + sbSess.uid); localStorage.removeItem(CACHE + sbSess.uid + ".dirty"); } catch (e) {} }
@@ -2644,7 +2645,7 @@
     loadUserData(u);
     applyUser(u);
     var g = $("gate");
-    var done = function () { g.hidden = true; g.classList.remove("leaving"); lockPage(false); var cv = $("p-" + currentView); if (cv) syncVideos(cv); if (C3.kick) C3.kick(); };
+    var done = function () { g.hidden = true; g.classList.remove("leaving"); lockPage(false); var cv = $("p-" + currentView); if (cv) syncVideos(cv); if (C3.kick) C3.kick(); setTimeout(maybeAskPush, 2500); };
     if (quiet) { done(); return; }
     if (reduceMotion) done(); else { g.classList.add("leaving"); setTimeout(done, 700); }
     setTimeout(function () {
@@ -3380,26 +3381,51 @@
     }).catch(function () { pushUI("ready"); });
   }
   $("pushInstall").addEventListener("click", function () { $("installBtn").click(); });
+  // Pergunta no próprio app (só no aplicativo instalado, com conta, se ainda não decidiu). "Agora não" volta a perguntar em 7 dias.
+  var ASK_KEY = "portalFuturo.pushAsk";
+  function maybeAskPush() {
+    var card = $("pushAsk");
+    if (!PUSH_OK || !isStandalone() || !currentUser || !currentUser.cloud || Notification.permission === "denied") return;
+    try { var t = Number(localStorage.getItem(ASK_KEY + "." + currentUser.id)) || 0; if (Date.now() - t < 7 * 864e5) return; } catch (e) {}
+    pushReg().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+      if (sub && Notification.permission === "granted") return; // já ativado neste aparelho
+      if (!currentUser || document.body.classList.contains("locked")) return;
+      card.hidden = false; requestAnimationFrame(function () { card.classList.add("in"); });
+    }).catch(function () {});
+  }
+  function closeAsk(remember) {
+    var card = $("pushAsk"); card.classList.remove("in");
+    setTimeout(function () { card.hidden = true; }, reduceMotion ? 0 : 300);
+    if (remember && currentUser) { try { localStorage.setItem(ASK_KEY + "." + currentUser.id, String(Date.now())); } catch (e) {} }
+  }
+  $("pushAskNo").addEventListener("click", function () { closeAsk(true); });
+  $("pushAskYes").addEventListener("click", function () {
+    var b = this; b.disabled = true;
+    pushActivate().then(function (on) { b.disabled = false; closeAsk(!on); if (on && currentView === "perfil") renderPush(); },
+      function (msg) { b.disabled = false; closeAsk(false); toast(msg); });
+  });
+  // Ativa as notificações neste aparelho. Resolve true se ligou, false se a pessoa negou; rejeita com a mensagem de erro.
+  function pushActivate() {
+    return Notification.requestPermission().then(function (perm) {
+      if (perm !== "granted") return false;
+      return Promise.all([pushReg(), fetch(SB_URL + "/functions/v1/push", { credentials: "omit", cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error("key"); return r.json(); })]).then(function (res) {
+        var reg = res[0], key = res[1] && res[1].publicKey;
+        if (typeof key !== "string" || !/^[A-Za-z0-9_-]{80,100}$/.test(key)) throw new Error("key");
+        return reg.pushManager.getSubscription().then(function (old) { return old ? old.unsubscribe() : null; })
+          .then(function () { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(key) }); });
+      }).then(function (sub) {
+        var j = sub.toJSON();
+        return sbAuthed("POST", "/rest/v1/rpc/push_subscribe", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_prefs: { fin: true, datas: true, novidades: true } });
+      }).then(function () { toast("Notificações ativadas. Você escolhe o que receber em Perfil › Notificações."); return true; });
+    }).catch(function (e) {
+      if (e === false) return false;
+      throw e && /too many/.test(e.message || "") ? "Sua conta já recebe notificações em 5 aparelhos. Desative em algum deles primeiro." : "Não foi possível ativar agora. Verifique a internet e tente de novo.";
+    });
+  }
   $("pushOn").addEventListener("click", function () {
     var btn = this, err = $("pushErr"); err.textContent = ""; btn.disabled = true;
-    Notification.requestPermission().then(function (perm) {
-      if (perm !== "granted") { renderPush(); throw null; }
-      return Promise.all([pushReg(), fetch(SB_URL + "/functions/v1/push", { credentials: "omit", cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error("key"); return r.json(); })]);
-    }).then(function (res) {
-      var reg = res[0], key = res[1] && res[1].publicKey;
-      if (typeof key !== "string" || !/^[A-Za-z0-9_-]{80,100}$/.test(key)) throw new Error("key");
-      return reg.pushManager.getSubscription().then(function (old) { return old ? old.unsubscribe() : null; })
-        .then(function () { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(key) }); });
-    }).then(function (sub) {
-      var j = sub.toJSON();
-      return sbAuthed("POST", "/rest/v1/rpc/push_subscribe", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_prefs: { fin: true, datas: true, novidades: true } });
-    }).then(function () {
-      pushUI("active", { fin: true, datas: true, novidades: true });
-      toast("Notificações ativadas. O primeiro lembrete chega na próxima data importante.");
-    }).catch(function (e) {
-      if (e === null) return;
-      err.textContent = e && /too many/.test(e.message || "") ? "Sua conta já recebe notificações em 5 aparelhos. Desative em algum deles primeiro." : "Não foi possível ativar agora. Verifique a internet e tente de novo.";
-    }).then(function () { btn.disabled = false; });
+    pushActivate().then(function (on) { btn.disabled = false; if (on) pushUI("active", { fin: true, datas: true, novidades: true }); else renderPush(); },
+      function (msg) { btn.disabled = false; err.textContent = msg; });
   });
   document.querySelectorAll("#pushList [data-pref]").forEach(function (c) {
     c.addEventListener("change", function () {

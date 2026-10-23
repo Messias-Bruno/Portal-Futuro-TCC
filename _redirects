@@ -1,0 +1,7 @@
+# Portal Futuro · arquivos internos do projeto não ficam públicos (Cloudflare Pages e Netlify)
+/supabase/*     /404.html  302
+/README.md      /404.html  302
+/.gitignore     /404.html  302
+/_headers       /404.html  302
+/_redirects     /404.html  302
+/netlify.toml   /404.html  302

@@ -1,4 +1,4 @@
-# Portal Futuro · cabeçalhos de segurança (Netlify)
+# Portal Futuro · cabeçalhos de segurança (Cloudflare Pages e Netlify)
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff

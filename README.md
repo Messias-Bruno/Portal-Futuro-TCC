@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.29 (23/10/2026):** créditos em todas as versões: "Desenvolvedor: Bruno Henrique Messias de Sousa" no lugar de "Idealização e créditos", sem o nome da equipe.
 - **v1.28 (22/10/2026):** celular: saldo do mês no topo da página inicial, acima do calendário ao vivo; Agenda saiu da barra de abas e foi para o painel Ferramentas (barra com Início, Guia, Ferramentas e Perfil). Computador: saiu da página inicial o bloco "Seis capítulos, na ordem das decisões", já que os atalhos acima levam aos mesmos capítulos.
 - **v1.27 (22/10/2026):** notificações sem a letra "P" à direita (alguns Android desenhavam a inicial quando não havia imagem; agora vai uma imagem transparente).
 - **v1.26 (22/10/2026):** só no celular: página inicial mínima (abertura e o calendário ao vivo, que abre o calendário ao tocar no cartão); sem o rodapé em todas as telas; créditos e política de privacidade nas Configurações; Salários saiu do painel Ferramentas (continua no capítulo Carreira). O computador não mudou.

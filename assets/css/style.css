@@ -1542,3 +1542,25 @@ html.calm *,html.calm *::before,html.calm *::after{animation-duration:.01ms!impo
   footer .foot-in{padding-block:28px}
   .fb-fab{display:none}
 }
+
+/* v1.26 · celular: início mínimo, créditos nas configurações, sem rodapé */
+.m-row-only{display:none!important}
+.set-sub[hidden],.set-body[hidden]{display:none}
+.set-sub{flex:1;overflow:auto;overscroll-behavior:contain;padding:0 20px calc(28px + env(safe-area-inset-bottom,0px))}
+.set-back{display:inline-flex!important;align-items:center;gap:6px;border:0;background:none;font:inherit;color:var(--muted-c);padding:8px 12px 8px 4px;cursor:pointer}
+.set-back .ico{width:20px;height:20px}
+.set-sub-h{font-family:var(--font-display);font-weight:400;font-size:1.8rem;margin:6px 4px 14px}
+.set-text{padding:6px 18px}
+.set-text p{margin:12px 0;font-size:.92rem;line-height:1.6;color:var(--text)}
+.set-text p:empty{display:none}
+@media (max-width:760px){
+  .m-row-only{display:flex!important}
+  .set-sub{padding:0 16px calc(24px + env(safe-area-inset-bottom,0px))}
+  body > footer{display:none}
+  .home-body > section[aria-labelledby="h-atalhos"],.home-body > .m-guide,.home-body > section[aria-labelledby="h-agora"],.home-body > section[aria-labelledby="h-caderno"]{display:none}
+  .home-body > section[aria-labelledby="h-live"] .block-head a{display:none}
+  .tap-card{cursor:pointer;position:relative;transition:transform .2s var(--ease)}
+  .tap-card:active{transform:scale(.98)}
+  .hero-secondary{display:none}
+  .view-inner{padding-bottom:28px}
+}

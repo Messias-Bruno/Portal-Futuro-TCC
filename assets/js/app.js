@@ -3438,6 +3438,7 @@
     setPushStatus();
   }
   function openSettings() {
+    $("setCredits").hidden = true; setEl.querySelector(".set-body").hidden = false;
     fillSettings(); setOpen = true; setEl.hidden = false; setBtn.setAttribute("aria-expanded", "true");
     document.body.classList.add("sheet-open");
     requestAnimationFrame(function () { setEl.classList.add("open"); var f = setEl.querySelector(".set-head .round-btn"); if (f) f.focus({ preventScroll: true }); });
@@ -3491,6 +3492,14 @@
   $("setSound").addEventListener("change", function () { prefs.sound = this.checked; savePrefs(); if (prefs.sound) Sfx.tap(); });
   $("setVib").addEventListener("change", function () { prefs.vib = this.checked; savePrefs(); if (prefs.vib && navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} } });
   $("setLogout").addEventListener("click", function () { closeSettings(true); $("pfLogout").click(); });
+  // Créditos (celular): uma tela dentro das Configurações
+  function credits(open) {
+    $("setCredits").hidden = !open; setEl.querySelector(".set-body").hidden = open;
+    if (open) { $("setCredData").textContent = $("footDataTxt").textContent; setEl.querySelectorAll(".copy-y").forEach(function (n) { n.textContent = $("copyYear").textContent; }); $("setCredBack").focus({ preventScroll: true }); }
+    else $("setCred").focus({ preventScroll: true });
+  }
+  $("setCred").addEventListener("click", function () { credits(true); });
+  $("setCredBack").addEventListener("click", function () { credits(false); });
   $("setFb").addEventListener("click", function () { closeSettings(true); setTimeout(function () { $("fbOpen").click(); }, 50); });
   $("setInstall").addEventListener("click", function () { closeSettings(true); $("installBtn").click(); });
   $("setClear").addEventListener("click", function () {
@@ -3506,6 +3515,19 @@
   /* ---------- Celular: telas com menos rolagem ----------
      Cada página mostra só o essencial e uma lista dos assuntos; tocando num assunto, ele abre numa tela própria com "voltar". */
   var phoneMQ = window.matchMedia("(max-width: 760px)");
+  (function () {
+    var card = document.querySelector("#p-inicio .live-home > .card.live");
+    if (!card) return;
+    function sync() {
+      if (phoneMQ.matches) { card.setAttribute("role", "link"); card.tabIndex = 0; card.setAttribute("aria-label", "Abrir o calendário"); card.classList.add("tap-card"); }
+      else { card.removeAttribute("role"); card.removeAttribute("tabindex"); card.removeAttribute("aria-label"); card.classList.remove("tap-card"); }
+    }
+    card.addEventListener("click", function () { if (phoneMQ.matches) { Sfx.tap(); location.hash = "calendario"; } });
+    card.addEventListener("keydown", function (e) { if (phoneMQ.matches && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); location.hash = "calendario"; } });
+    if (phoneMQ.addEventListener) phoneMQ.addEventListener("change", sync);
+    setTimeout(sync, 0);
+  })();
+
   var INLINE = { financas: ["lancar", "resumo"], provas: ["avaliacoes"], agenda: ["nova-atividade", "atividades"], calendario: ["agora", "mes", "dia"], onibus: ["planejar"], campus: ["mapa"], perfil: ["pf-resumo"] };
   function svgUse(id, cls) { var s = document.createElementNS("http://www.w3.org/2000/svg", "svg"), u = document.createElementNS("http://www.w3.org/2000/svg", "use"); s.setAttribute("class", "ico " + (cls || "")); s.setAttribute("aria-hidden", "true"); u.setAttribute("href", "#" + id); s.appendChild(u); return s; }
   document.querySelectorAll("section.view").forEach(function (view) {

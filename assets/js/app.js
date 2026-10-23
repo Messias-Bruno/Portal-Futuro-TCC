@@ -233,7 +233,7 @@
     panel.addEventListener("touchmove", function (e) { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); panel.style.transform = dy ? "translateY(" + dy + "px)" : ""; }, { passive: true });
     panel.addEventListener("touchend", function () { if (y0 === null) return; panel.style.transform = ""; if (dy > 90) closeSheet(); y0 = null; });
   });
-  var TAB_OF = { inicio: "inicio", agenda: "agenda", perfil: "perfil", financas: "ferramentas", provas: "ferramentas", calendario: "ferramentas", onibus: "ferramentas", campus: "ferramentas" };
+  var TAB_OF = { inicio: "inicio", agenda: "ferramentas", perfil: "perfil", financas: "ferramentas", provas: "ferramentas", calendario: "ferramentas", onibus: "ferramentas", campus: "ferramentas" };
   function syncTabs(v) {
     var t = TAB_OF[v] || "guia";
     document.querySelectorAll("#tabbar [data-tab]").forEach(function (a) {

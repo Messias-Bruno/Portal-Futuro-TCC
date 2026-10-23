@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.27 (22/10/2026):** notificações sem a letra "P" à direita (alguns Android desenhavam a inicial quando não havia imagem; agora vai uma imagem transparente).
 - **v1.26 (22/10/2026):** só no celular: página inicial mínima (abertura e o calendário ao vivo, que abre o calendário ao tocar no cartão); sem o rodapé em todas as telas; créditos e política de privacidade nas Configurações; Salários saiu do painel Ferramentas (continua no capítulo Carreira). O computador não mudou.
 - **v1.25 (22/10/2026):** Configurações (ícone de engrenagem ao lado do tema): tema automático, claro ou escuro, tamanho do texto, menos animações, sons, vibração ao tocar, notificações, conta, privacidade, dar opinião, instalar o aplicativo, limpar dados do aparelho e versão. Sons suaves criados pelo próprio navegador ao tocar nos ícones e ao abrir o portal, e uma marcação leve nos ícones tocados (no celular e no computador). No celular, telas com menos rolagem: a página inicial mostra só o essencial (caderno, atalhos em grade, capítulos deslizando, relógio e próximos compromissos) e cada página vira uma lista de assuntos; tocando num assunto, ele abre numa tela própria com voltar. O botão "Dar opinião" do celular foi para as Configurações. O computador mantém a mesma estrutura.
 - **v1.24 (22/10/2026):** notificações sem a imagem grande da estrela à direita (o ícone do aplicativo já aparece à esquerda).

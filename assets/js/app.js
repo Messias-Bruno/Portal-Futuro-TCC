@@ -3429,7 +3429,7 @@
     paintSeg("setTheme", themeMode()); paintSeg("setText", prefs.text);
     $("setCalm").checked = prefs.calm; $("setSound").checked = prefs.sound; $("setVib").checked = prefs.vib;
     $("setVibRow").hidden = !navigator.vibrate;
-    $("setInstall").hidden = !!(isStandalone() || $("installWrap").hidden);
+    $("setInstall").hidden = isStandalone();
     $("setLogout").hidden = !u;
     var cloud = !!(u && u.cloud);
     $("setClearD").textContent = cloud ? "Apaga a cópia guardada aqui e baixa tudo de novo da nuvem." : "Disponível para contas na nuvem. A demonstração guarda tudo só neste aparelho.";
@@ -3684,7 +3684,8 @@
     window.addEventListener("appinstalled", function () { wrap.hidden = true; deferred = null; toast("Portal Futuro instalado. Procure o ícone na tela do celular."); });
     btn.addEventListener("click", function () {
       if (deferred) { deferred.prompt(); deferred.userChoice.then(function () { deferred = null; }); return; }
-      if (isIOS) { document.body.classList.remove("has-cursor"); if (typeof ios.showModal === "function") ios.showModal(); else ios.setAttribute("open", ""); }
+      if (isIOS) { document.body.classList.remove("has-cursor"); if (typeof ios.showModal === "function") ios.showModal(); else ios.setAttribute("open", ""); return; }
+      toast(window.matchMedia("(max-width: 760px)").matches ? "No Chrome, toque em ⋮ (canto de cima) e depois em Instalar aplicativo ou Adicionar à tela inicial." : "No Chrome, clique no ícone de instalar na barra de endereço, ou em ⋮ › Transmitir, salvar e compartilhar › Instalar.");
     });
     ios.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", function () { ios.close(); }); });
     ios.addEventListener("click", function (e) { if (e.target === ios) ios.close(); });

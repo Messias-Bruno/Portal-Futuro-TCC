@@ -9,7 +9,7 @@ import { newVapidKeys, publicFromJwk, sendPush } from "./webpush.js";
 
 const SB = Deno.env.get("SUPABASE_URL")!;
 const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SUBJECT = "https://portal-futuro.netlify.app";
+const SUBJECT = "https://portal-futuro.pages.dev";
 const ALLOWED = /^https:\/\/(fcm\.googleapis\.com|updates\.push\.services\.mozilla\.com|push\.services\.mozilla\.com|[a-z0-9.-]+\.push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com|[a-z0-9.-]+\.wns\.windows\.com)\//;
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, OPTIONS", "Access-Control-Allow-Headers": "apikey, authorization, content-type" };
 

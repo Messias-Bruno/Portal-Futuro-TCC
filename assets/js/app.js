@@ -337,7 +337,7 @@
 
   function route(token, animate) {
     closeMenu();
-    if (token === "privacidade") { openPrivacy(); if (!currentView) show("inicio", false); return; } // endereço direto da política (portal-futuro.netlify.app/#privacidade)
+    if (token === "privacidade") { openPrivacy(); if (!currentView) show("inicio", false); return; } // endereço direto da política (portal-futuro.pages.dev/#privacidade)
     if (VIEWS.indexOf(token) >= 0) {
       if (typeof setDetail === "function") setDetail(null);
       show(token, animate);
@@ -3347,7 +3347,7 @@
     var L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Portal Futuro//Agenda//PT-BR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
       "X-WR-CALNAME:" + icsEsc(kind === "provas" ? "Portal Futuro · Provas" : "Portal Futuro · Agenda")];
     items.forEach(function (it) {
-      L.push("BEGIN:VEVENT", "UID:" + icsEsc(it.id) + "-" + kind + "@portal-futuro.netlify.app", "DTSTAMP:" + stamp,
+      L.push("BEGIN:VEVENT", "UID:" + icsEsc(it.id) + "-" + kind + "@portal-futuro.pages.dev", "DTSTAMP:" + stamp,
         "DTSTART;VALUE=DATE:" + icsDay(it.d), "DTEND;VALUE=DATE:" + icsNextDay(it.d), "SUMMARY:" + icsEsc(it.t));
       if (it.desc) L.push("DESCRIPTION:" + icsEsc(it.desc + " · Portal Futuro"));
       L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc("Amanhã: " + it.t), "TRIGGER:-PT15H", "END:VALARM", "END:VEVENT");

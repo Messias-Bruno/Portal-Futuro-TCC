@@ -55,7 +55,7 @@ portal-futuro/
 
 ## Publicar no Netlify
 
-Endereço: **https://portal-futuro.netlify.app** (projeto `portal-futuro` no Netlify). Para publicar à mão: no painel do Netlify, abra o projeto → **Deploys** → arraste o arquivo `portal-futuro-netlify.zip` (ou a pasta com `index.html`, `assets` e `_headers`).
+Endereço: **https://portal-futuro.pages.dev** (projeto `portal-futuro` no Netlify). Para publicar à mão: no painel do Netlify, abra o projeto → **Deploys** → arraste o arquivo `portal-futuro-netlify.zip` (ou a pasta com `index.html`, `assets` e `_headers`).
 
 O arquivo `netlify.toml` já configura a publicação e os cabeçalhos de segurança (impede abrir o site dentro de outro site, bloqueia scripts de fora, entre outros). Basta publicar a pasta do projeto inteira.
 
@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.30 (29/10/2026):** o portal mudou para o Cloudflare Pages: novo endereço **https://portal-futuro.pages.dev** (os créditos gratuitos do Netlify acabaram e as publicações ficaram paradas até 19/11). Cabeçalhos de segurança em `_headers` e arquivos internos escondidos por `_redirects`. Endereço atualizado no link de compartilhamento, na agenda (.ics) e nas notificações.
 - **v1.29 (23/10/2026):** créditos em todas as versões: "Desenvolvedor: Bruno Henrique Messias de Sousa" no lugar de "Idealização e créditos", sem o nome da equipe.
 - **v1.28 (22/10/2026):** celular: saldo do mês no topo da página inicial, acima do calendário ao vivo; Agenda saiu da barra de abas e foi para o painel Ferramentas (barra com Início, Guia, Ferramentas e Perfil). Computador: saiu da página inicial o bloco "Seis capítulos, na ordem das decisões", já que os atalhos acima levam aos mesmos capítulos.
 - **v1.27 (22/10/2026):** notificações sem a letra "P" à direita (alguns Android desenhavam a inicial quando não havia imagem; agora vai uma imagem transparente).
@@ -100,10 +101,10 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 - **v1.13 (20/10/2026):** crédito do vídeo da abertura (MotionSites AI, modelo Velorah) no rodapé, no README e na política de privacidade; removida a busca pelo arquivo local do vídeo, que não existe.
 - **v1.12 (20/10/2026):** ilustrações animadas que faltavam no topo de Carreira (fichário), Cursos (duração dos cursos), Instituições (fachada com lupa), Documentos (pasta organizada) e Planejamento (semana com blocos de estudo); antes aparecia só a marcação `{{ILL:...}}`.
 - **v1.11 (20/10/2026):** login com Google ligado (projeto "Portal Futuro" no Google Cloud, conta portalfuturo.app@gmail.com), com aviso de que entrar com o Google é aceitar a política de privacidade.
-- **v1.10 (20/10/2026):** endereço direto da política de privacidade: https://portal-futuro.netlify.app/#privacidade (usado na tela de consentimento do Google).
+- **v1.10 (20/10/2026):** endereço direto da política de privacidade: https://portal-futuro.pages.dev/#privacidade (usado na tela de consentimento do Google).
 - **v1.9 (20/10/2026):** nome completo do autor (Bruno Henrique Messias de Sousa) no rodapé, na tela de entrada, na política de privacidade e nos créditos; publicação automática pelo GitHub (repositório Portal-Futuro-TCC) no Netlify.
 - **v1.8 (20/10/2026):** política de privacidade (LGPD) em uma janela que abre no cadastro, no rodapé e no perfil, com o aceite registrado na conta; conta nova começa vazia (os exemplos ficam só na conta de demonstração); e-mails de confirmação e de nova senha em português (`supabase/emails`), enviados pelo Gmail do portal.
-- **v1.7 (20/10/2026):** login de verdade ligado (Supabase) para o endereço https://portal-futuro.netlify.app; arquivo `_headers` com os cabeçalhos de segurança para publicar arrastando a pasta no Netlify.
+- **v1.7 (20/10/2026):** login de verdade ligado (Supabase) para o endereço https://portal-futuro.pages.dev; arquivo `_headers` com os cabeçalhos de segurança para publicar arrastando a pasta no Netlify.
 - **v1.6 (20/10/2026):** tabelas e regras de segurança criadas no Supabase e testadas (um aluno não lê nem altera os dados de outro; visitantes sem login não acessam nada); na tela de entrada, no computador, só o painel do formulário rola e a arte da esquerda fica parada; `netlify.toml` com os cabeçalhos de segurança para a publicação.
 - **v1.5 (20/10/2026):** contas de verdade com Supabase (cadastro com confirmação por e-mail, login, "esqueci minha senha", login com Google pronto para ligar, perfil e dados das ferramentas na nuvem, troca de senha e exclusão da conta no servidor); estrutura do banco em `supabase/schema.sql`.
 - **v1.4 (20/10/2026):** provas, gastos, agenda, documentos e favoritos passam a ser separados por conta (antes, contas no mesmo navegador viam os dados umas das outras); dados da versão antiga passam para a conta só se ela for a única do navegador; apagar a conta apaga também os dados dela; a página Finanças não rola mais para o lado no celular.

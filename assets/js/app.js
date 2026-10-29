@@ -331,6 +331,7 @@
     if (v === "calendario" && window._pfReady) { renderCalendar(); renderDay(); renderFixed(); }
     var ubtn = $("userBtn"); if (v === "perfil") ubtn.setAttribute("aria-current", "page"); else ubtn.removeAttribute("aria-current");
     if (v === "perfil" && window._pfReady) renderProfile();
+    if ((v === "calendario" || v === "ingresso") && window._pfReady && typeof loadOfficial === "function") loadOfficial(false);
     if (target) startSpy(target);
     if (window._pfReady) motionOnShow(v, target, animate);
     return true;
@@ -762,6 +763,8 @@
     body.appendChild(srcs);
     var official = el("a", { class: "doc-link", href: l.type === "mun" ? "https://www.emdec.com.br" : "https://www.emtu.sp.gov.br", target: "_blank", rel: "noopener noreferrer" }, [l.type === "mun" ? "Horários atualizados na Emdec" : "Horários atualizados na EMTU", el("span", { class: "sr-only", text: " (abre em nova aba)" })]);
     body.appendChild(official);
+    var city = l.type === "mun" ? "Campinas" : "Região Metropolitana de Campinas";
+    body.appendChild(el("a", { class: "doc-link", href: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("linha de ônibus " + l.n + " " + city), target: "_blank", rel: "noopener noreferrer" }, ["Ver a linha no Google Maps", el("span", { class: "sr-only", text: " (abre em nova aba)" })]));
     head.addEventListener("click", function () {
       var open = body.hidden;
       openLine = open ? id : null;
@@ -2674,7 +2677,7 @@
     loadUserData(u);
     applyUser(u);
     var g = $("gate");
-    var done = function () { g.hidden = true; g.classList.remove("leaving"); lockPage(false); var cv = $("p-" + currentView); if (cv) syncVideos(cv); if (C3.kick) C3.kick(); setTimeout(maybeAskPush, 2500); Sfx.open(); Amb.sync(); };
+    var done = function () { g.hidden = true; g.classList.remove("leaving"); lockPage(false); var cv = $("p-" + currentView); if (cv) syncVideos(cv); if (C3.kick) C3.kick(); setTimeout(maybeAskPush, 2500); Sfx.open(); Amb.sync(); if (currentView === "calendario" || currentView === "ingresso") loadOfficial(true); };
     if (quiet) { done(); return; }
     if (reduceMotion) done(); else { g.classList.add("leaving"); setTimeout(done, 700); }
     setTimeout(function () {
@@ -2997,6 +3000,7 @@
     if (!currentUser) return;
     loadPortalNumbers(false);
     renderPush();
+    loadReview();
     // conta local: relê do armazenamento, assim os campos novos do perfil sempre existem e estão validados
     var u = currentUser.cloud ? currentUser : authStore().users.filter(function (x) { return x.id === currentUser.id; })[0];
     if (!u) return;
@@ -3742,6 +3746,96 @@
   $("pushOff").addEventListener("click", function () {
     var btn = this; btn.disabled = true;
     pushStop().then(function () { btn.disabled = false; renderPush(); toast("Notificações desativadas neste aparelho."); });
+  });
+
+  /* ---------- Datas oficiais e editais explicados (revisados pelo dono antes de aparecer) ---------- */
+  function fmtBR(d) { var p = String(d || "").split("-"); return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : d; }
+  function fmtRange(a, b) { return b && b !== a ? fmtBR(a) + " a " + fmtBR(b) : fmtBR(a); }
+  function extLink(href, text) { return el("a", { class: "ext", href: href, target: "_blank", rel: "noopener noreferrer" }, [text, el("span", { class: "sr-only", text: " (abre em nova aba)" })]); }
+  function okUrl(u) { return typeof u === "string" && /^https:\/\//.test(u); }
+  var offLoaded = 0;
+  function loadOfficial(force) {
+    if (!currentUser || !currentUser.cloud) { $("offDates").replaceChildren(el("li", { class: "muted small", text: "Entre com uma conta para ver as datas oficiais conferidas pelo portal." })); $("editList").replaceChildren(el("p", { class: "muted", text: "Entre com uma conta para ler os editais explicados." })); return; }
+    if (!force && Date.now() - offLoaded < 5 * 60000) return;
+    offLoaded = Date.now();
+    var today = new Date().toISOString().slice(0, 10);
+    sbAuthed("GET", "/rest/v1/official_dates?select=titulo,data_ini,data_fim,link,reviewed_at&status=eq.publicada&or=(data_fim.gte." + today + ",and(data_fim.is.null,data_ini.gte." + today + "))&order=data_ini.asc&limit=40").then(function (rows) {
+      var ol = $("offDates"); ol.replaceChildren();
+      if (!rows || !rows.length) { ol.appendChild(el("li", { class: "muted small", text: "Nenhuma data nova conferida no momento." })); return; }
+      rows.forEach(function (r) {
+        ol.appendChild(el("li", null, [el("span", { class: "when", text: fmtRange(r.data_ini, r.data_fim) }), el("span", { class: "t" }, [el("b", { text: r.titulo }), r.link && okUrl(r.link) ? el("span", { class: "small muted" }, [" · ", extLink(r.link, "fonte oficial")]) : null])]));
+      });
+    }).catch(function (e) { console.warn("datas oficiais", e); offLoaded = 0; $("offDates").replaceChildren(el("li", { class: "muted small", text: "Não foi possível carregar as datas agora. Tente de novo mais tarde." })); });
+    sbAuthed("GET", "/rest/v1/editais?select=id,titulo,pdf_url,resumo,reviewed_at&status=eq.publicado&order=reviewed_at.desc&limit=20").then(function (rows) {
+      var box = $("editList"); box.replaceChildren();
+      if (!rows || !rows.length) { box.appendChild(el("p", { class: "muted", text: "Ainda não há editais explicados. Assim que um edital novo sair, o resumo aparece aqui." })); return; }
+      rows.forEach(function (r) { box.appendChild(editalCard(r, false)); });
+    }).catch(function () {});
+  }
+  function editalCard(r, owner) {
+    var d = r.resumo || {}, det = el("details", { class: "edital" });
+    det.appendChild(el("summary", null, [el("b", { text: r.titulo }), el("span", { class: "small muted", text: d.resumo ? d.resumo.slice(0, 140) + (d.resumo.length > 140 ? "…" : "") : "" })]));
+    var body = el("div", { class: "edital-body prose" });
+    if (d.resumo) body.appendChild(el("p", { text: d.resumo }));
+    function list(t, arr) { if (!arr || !arr.length) return; body.appendChild(el("h4", { text: t })); body.appendChild(el("ul", null, arr.map(function (x) { return el("li", { text: x }); }))); }
+    list("Para quem é", d.para_quem);
+    if (d.datas && d.datas.length) { body.appendChild(el("h4", { text: "Datas" })); body.appendChild(el("ul", null, d.datas.map(function (x) { return el("li", null, [el("b", { text: x.quando + ": " }), x.o_que]); }))); }
+    list("Como se inscrever", d.como_se_inscrever); list("Documentos", d.documentos);
+    if (d.taxa) { body.appendChild(el("h4", { text: "Taxa" })); body.appendChild(el("p", { text: d.taxa })); }
+    list("Atenção", d.atencao);
+    body.appendChild(el("p", { class: "note small" }, ["Resumo feito com ajuda de inteligência artificial e revisado pelo Portal Futuro. Ele não substitui o edital: confira sempre o documento oficial. ", okUrl(r.pdf_url) ? extLink(r.pdf_url, "Abrir o edital oficial (PDF)") : null]));
+    det.appendChild(body);
+    return det;
+  }
+  // Painel do dono: o que espera revisão
+  var reviewT = null;
+  function loadReview() {
+    var sec = $("pf-revisar");
+    if (!currentUser || !currentUser.cloud) { sec.hidden = true; return; }
+    sbAuthed("POST", "/rest/v1/rpc/owner_review", {}).then(function (r) {
+      if (!r) { sec.hidden = true; return; }
+      sec.hidden = false;
+      var dl = $("revDatas"); dl.replaceChildren();
+      if (!r.datas.length) dl.appendChild(el("li", { class: "muted small", text: "Nenhuma data esperando revisão." }));
+      r.datas.forEach(function (d) {
+        dl.appendChild(el("li", { class: "rev-item" }, [el("div", { class: "rev-t" }, [el("b", { text: d.titulo }), el("span", { class: "small muted" }, [fmtRange(d.data_ini, d.data_fim) + " · " + (d.fonte || "fonte") + " · ", okUrl(d.link) ? extLink(d.link, "conferir na fonte") : null])]),
+          el("div", { class: "rev-act" }, [el("button", { class: "btn sm", type: "button", text: "Publicar", onclick: function () { setDate(d.id, "publicada"); } }), el("button", { class: "btn sm secondary", type: "button", text: "Recusar", onclick: function () { setDate(d.id, "recusada"); } })])]));
+      });
+      var al = $("revAlertas"); al.replaceChildren();
+      if (!r.alertas.length) al.appendChild(el("li", { class: "muted small", text: "Nenhuma página oficial mudou desde a última conferência." }));
+      r.alertas.forEach(function (a) {
+        al.appendChild(el("li", { class: "rev-item" }, [el("div", { class: "rev-t" }, [el("b", { text: a.fonte }), el("span", { class: "small muted" }, ["Mudou em " + new Date(a.quando).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) + " · ", extLink(a.url, "abrir a página")])]),
+          el("div", { class: "rev-act" }, [el("button", { class: "btn sm secondary", type: "button", text: "Já conferi", onclick: function () { sbAuthed("POST", "/rest/v1/rpc/owner_resolve_alert", { p_id: a.id }).then(loadReview); } })])]));
+      });
+      var el2 = $("revEditais"); el2.replaceChildren(); var waiting = false;
+      if (!r.editais.length) el2.appendChild(el("p", { class: "muted small", text: "Nenhum resumo esperando revisão." }));
+      r.editais.forEach(function (e) {
+        if (e.status === "gerando") { waiting = true; el2.appendChild(el("p", { class: "rev-wait" }, [el("b", { text: e.titulo }), " · preparando o resumo… isso leva até 2 minutos."])); return; }
+        if (e.status === "erro") { el2.appendChild(el("div", { class: "rev-item" }, [el("div", { class: "rev-t" }, [el("b", { text: e.titulo }), el("span", { class: "small form-error", text: "Não deu certo: " + (e.erro || "erro desconhecido") })]), el("div", { class: "rev-act" }, [el("button", { class: "btn sm secondary", type: "button", text: "Descartar", onclick: function () { setEdital(e.id, "recusado"); } })])])); return; }
+        var card = editalCard(e, true); card.open = true;
+        card.appendChild(el("div", { class: "rev-act" }, [el("button", { class: "btn sm", type: "button", text: "Publicar resumo", onclick: function () { setEdital(e.id, "publicado"); } }), el("button", { class: "btn sm secondary", type: "button", text: "Recusar", onclick: function () { setEdital(e.id, "recusado"); } })]));
+        el2.appendChild(card);
+      });
+      var fl = $("revFontes"); fl.replaceChildren();
+      r.fontes.forEach(function (f) { fl.appendChild(el("li", { class: "small" }, [extLink(f.url, f.nome), " · " + (f.conferida ? "conferida em " + new Date(f.conferida).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "ainda não conferida") + (f.status && f.status !== 200 ? " (a página respondeu " + f.status + ")" : "")])); });
+      clearTimeout(reviewT); if (waiting) reviewT = setTimeout(loadReview, 8000);
+    }).catch(function () { sec.hidden = true; });
+  }
+  function setDate(id, st) { sbAuthed("POST", "/rest/v1/rpc/owner_set_date", { p_id: id, p_status: st }).then(function () { toast(st === "publicada" ? "Data publicada para todos." : "Data recusada."); offLoaded = 0; loadReview(); }).catch(function () { toast("Não foi possível salvar. Tente de novo."); }); }
+  function setEdital(id, st) { sbAuthed("POST", "/rest/v1/rpc/owner_set_edital", { p_id: id, p_status: st }).then(function () { toast(st === "publicado" ? "Resumo publicado em Ingresso › Editais explicados." : "Resumo descartado."); offLoaded = 0; loadReview(); }).catch(function () { toast("Não foi possível salvar. Tente de novo."); }); }
+  $("revForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var t = str($("revTitulo").value, 120).trim(), u = String($("revUrl").value || "").trim(), msg = $("revErr"), btn = $("revBtn");
+    msg.textContent = "";
+    if (t.length < 3) { msg.textContent = "Dê um título ao edital."; return; }
+    if (!/^https:\/\/\S+$/i.test(u)) { msg.textContent = "Cole o link do PDF no site oficial (começa com https://)."; return; }
+    btn.disabled = true;
+    sbToken().then(function (tok) {
+      return fetch(SB_URL + "/functions/v1/edital", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok, apikey: SB_KEY }, body: JSON.stringify({ titulo: t, pdf_url: u }), credentials: "omit" })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || "erro"); return j; }); });
+    }).then(function () { $("revForm").reset(); toast("Preparando o resumo. Ele aparece aqui para você revisar."); loadReview(); })
+      .catch(function (er) { msg.textContent = "Não foi possível: " + (er && er.message ? er.message : "tente de novo") + "."; })
+      .then(function () { btn.disabled = false; });
   });
 
   /* ---------- Aplicativo (instalar na tela inicial) ---------- */

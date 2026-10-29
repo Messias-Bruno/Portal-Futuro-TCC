@@ -249,7 +249,7 @@
       <div class="set-list">
         <button class="set-row link" type="button" id="setClear"><span class="set-l"><b id="setClearT">Limpar dados do aparelho</b><span class="d" id="setClearD">Apaga a cópia guardada aqui e baixa tudo de novo da nuvem.</span></span></button>
       </div>
-      <p class="set-about">Portal Futuro · versão <span id="setVer">1.34</span><br>Desenvolvedor: Bruno Henrique Messias de Sousa<br>Créditos: João Vitor Lucena e Lorena Ramiro<br>SENAI · 2026</p>
+      <p class="set-about">Portal Futuro · versão <span id="setVer">1.35</span><br>Desenvolvedor: Bruno Henrique Messias de Sousa<br>Créditos: João Vitor Lucena e Lorena Ramiro<br>SENAI · 2026</p>
     </div>
   </div>
 </div>
@@ -498,6 +498,7 @@
         <li><a href="#golpes"><span class="n">04</span><span class="t">Proteja-se de golpes</span><span class="d">Sites oficiais e taxas falsas</span></a></li>
         <li><a href="#matricula"><span class="n">05</span><span class="t">Documentos da matrícula</span><span class="d">Lista para marcar</span></a></li>
         <li><a href="#disciplinas"><span class="n">06</span><span class="t">Matrícula nas disciplinas</span><span class="d">Rematrícula, créditos e CR</span></a></li>
+        <li><a href="#editais"><span class="n">07</span><span class="t">Editais explicados</span><span class="d">Resumos em linguagem simples</span></a></li>
       </ol>
     </details>
     <div class="page-body">
@@ -592,6 +593,11 @@
           <div><dt>Grade sem choque de horário</dt><dd>Monte a grade antes do dia da matrícula, com uma segunda opção para cada turma concorrida.</dd></div>
           <div><dt>Coeficiente de rendimento (CR)</dt><dd>A média ponderada das suas notas. Pode definir a prioridade na matrícula, bolsas e estágios.</dd></div>
         </dl>
+      </section>
+      <section class="sec glass-card spot" id="editais" aria-labelledby="h-editais">
+        <div class="sec-head"><span class="n">07</span><h2 id="h-editais">Editais explicados</h2></div>
+        <p class="muted">Editais de vestibulares e programas resumidos em linguagem simples, com o link do documento oficial. Cada resumo é revisado antes de aparecer aqui.</p>
+        <div class="edital-list" id="editList"></div>
       </section>
     </div>
   </div>
@@ -1265,6 +1271,10 @@
       </section>
       <section class="sec glass-card spot" id="datas" aria-labelledby="h-datas">
         <div class="sec-head"><span class="n">04</span><h2 id="h-datas">Próximas datas da região</h2></div>
+        <h3 class="sub-h">Datas oficiais conferidas</h3>
+        <ol class="cal" id="offDates"></ol>
+        <p class="small muted">O portal confere todo dia os sites do Inep, da Comvest e da PUC-Campinas. Cada data só aparece aqui depois de revisada.</p>
+        <h3 class="sub-h">Feriados</h3>
         <ol class="cal" id="fixedList"></ol>
         <p class="small muted">Feriados nacionais, de São Paulo e de Campinas. Outras cidades da região têm feriados municipais próprios. Datas oficiais podem mudar: confira nos sites do Inep e da Comvest.</p>
       </section>
@@ -1613,6 +1623,23 @@
           <div class="pf-bars" id="pfNumBars" role="img" aria-label="Contas novas por semana"></div>
         </div>
         <p class="small muted pf-num-foot"><span id="pfNumWhen"></span> <button type="button" class="link-btn" id="pfNumRefresh">Atualizar</button></p>
+      </section>
+      <section class="sec glass-card spot" id="pf-revisar" aria-labelledby="h-pf-rev" hidden>
+        <div class="sec-head"><span class="n">06</span><h2 id="h-pf-rev">Para revisar</h2></div>
+        <p class="muted">Só você vê esta parte. O que o servidor encontra fica aqui até você aprovar.</p>
+        <h3 class="sub-h">Datas encontradas nos sites oficiais</h3>
+        <ol class="rev-list" id="revDatas"></ol>
+        <h3 class="sub-h">Páginas oficiais que mudaram</h3>
+        <ol class="rev-list" id="revAlertas"></ol>
+        <h3 class="sub-h">Editais explicados</h3>
+        <form class="form rev-form" id="revForm" novalidate autocomplete="off">
+          <div class="field"><label for="revTitulo">Título</label><input type="text" id="revTitulo" maxlength="120" placeholder="Ex.: Vestibular Unicamp 2027"></div>
+          <div class="field"><label for="revUrl">Link do PDF oficial</label><input type="url" id="revUrl" maxlength="500" placeholder="https://…/edital.pdf" inputmode="url"></div>
+          <div class="field wide"><button class="btn" type="submit" id="revBtn">Gerar resumo com IA</button><p class="form-error" id="revErr" role="alert"></p></div>
+        </form>
+        <div class="rev-editais" id="revEditais"></div>
+        <h3 class="sub-h">Sites conferidos todo dia</h3>
+        <ul class="rev-fontes" id="revFontes"></ul>
       </section>
     </div>
   </div>

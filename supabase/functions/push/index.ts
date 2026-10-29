@@ -64,10 +64,10 @@ function clip(s: string, n: number) { s = String(s || ""); return s.length > n ?
 
 type Note = { key: string; title: string; body: string; url: string; tag: string };
 
-function dateNotes(today: string, data: any): Note[] {
+function dateNotes(today: string, data: any, official: { d: string; t: string; url: string }[]): Note[] {
   const out: Note[] = [];
   const when = (n: number) => (n === 1 ? "amanhã" : "em 7 dias");
-  OFFICIAL.forEach((o) => {
+  official.forEach((o) => {
     const n = daysBetween(today, o.d);
     if (n === 7 || n === 1) out.push({ key: "of:" + o.d + ":" + o.t.slice(0, 40) + ":" + n, title: (n === 1 ? "É amanhã: " : "Falta 1 semana: ") + clip(o.t, 50), body: n === 1 ? "Separe documento com foto e confira o local e o horário." : "Dia " + ddmm(o.d) + ". Ainda dá tempo de revisar com calma.", url: o.url, tag: "of-" + o.d });
   });
@@ -95,6 +95,10 @@ async function run(mode: string, dry: boolean, todayOverride?: string) {
   const today = todayOverride && /^\d{4}-\d{2}-\d{2}$/.test(todayOverride) ? todayOverride : todaySP();
   const subs: any[] = await db("push_subs?select=id,user_id,endpoint,p256dh,auth,prefs&active=eq.true");
   const news: any[] = await db("push_news?select=id,title,body,url&sent_at=is.null&order=id.asc&limit=3");
+  // Datas oficiais: as fixas daqui e as publicadas pelo dono (tabela official_dates), sem repetir o mesmo dia e nome
+  const pub: any[] = await db("official_dates?select=titulo,data_ini&status=eq.publicada&data_ini=gte." + today + "&limit=200").catch(() => []);
+  const official = OFFICIAL.concat(pub.map((x) => ({ d: x.data_ini, t: x.titulo, url: "/#datas" })))
+    .filter((o, i, a) => a.findIndex((y) => y.d === o.d && y.t.toLowerCase() === o.t.toLowerCase()) === i);
   const users = [...new Set(subs.filter((s) => s.prefs?.datas).map((s) => s.user_id))];
   const dataBy: Record<string, any> = {};
   for (let i = 0; i < users.length; i += 100) {
@@ -112,7 +116,7 @@ async function run(mode: string, dry: boolean, todayOverride?: string) {
         notes.push({ key: "fin:" + today.slice(0, 7), title: "Hora de organizar " + m, body: "Anote o que entrou e o que já saiu. Leva dois minutos e o mês fica mais leve.", url: "/#financas", tag: "fin" });
       }
       if (s.prefs?.datas) {
-        const dn = dateNotes(today, dataBy[s.user_id]);
+        const dn = dateNotes(today, dataBy[s.user_id], official);
         if (dn.length > 3) notes.push({ key: "resumo:" + today, title: dn.length + " datas chegando", body: "Abra a agenda para ver tudo o que vem nos próximos dias.", url: "/#agenda", tag: "resumo" });
         else notes = notes.concat(dn);
       }

@@ -53,11 +53,12 @@
   // Preferências deste aparelho (Configurações): sons, vibração, tamanho do texto e menos animações
   var PREF_KEY = "portalFuturo.prefs";
   var prefs = (function () {
-    var p = { sound: true, vib: true, text: "md", calm: false };
+    var p = { sound: true, amb: true, vib: true, text: "md", calm: false };
     try {
       var j = JSON.parse(localStorage.getItem(PREF_KEY) || "null");
       if (j && typeof j === "object") {
         if (typeof j.sound === "boolean") p.sound = j.sound;
+        if (typeof j.amb === "boolean") p.amb = j.amb;
         if (typeof j.vib === "boolean") p.vib = j.vib;
         if (["md", "lg", "xl"].indexOf(j.text) >= 0) p.text = j.text;
         if (typeof j.calm === "boolean") p.calm = j.calm;
@@ -2649,6 +2650,7 @@
     document.body.classList.toggle("locked", on);
     gateEls.forEach(function (n) { if (on) n.setAttribute("inert", ""); else n.removeAttribute("inert"); if (on) n.setAttribute("aria-hidden", "true"); else n.removeAttribute("aria-hidden"); });
     document.querySelectorAll("video").forEach(function (v) { try { if (on) v.pause(); } catch (e) {} });
+    if (typeof Amb !== "undefined" && Amb) Amb.sync();
   }
   function initials(n) { var p = n.trim().split(/\s+/); return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase(); }
   function firstName(n) { return n.trim().split(/\s+/)[0] || n; }
@@ -2672,7 +2674,7 @@
     loadUserData(u);
     applyUser(u);
     var g = $("gate");
-    var done = function () { g.hidden = true; g.classList.remove("leaving"); lockPage(false); var cv = $("p-" + currentView); if (cv) syncVideos(cv); if (C3.kick) C3.kick(); setTimeout(maybeAskPush, 2500); Sfx.open(); };
+    var done = function () { g.hidden = true; g.classList.remove("leaving"); lockPage(false); var cv = $("p-" + currentView); if (cv) syncVideos(cv); if (C3.kick) C3.kick(); setTimeout(maybeAskPush, 2500); Sfx.open(); Amb.sync(); };
     if (quiet) { done(); return; }
     if (reduceMotion) done(); else { g.classList.add("leaving"); setTimeout(done, 700); }
     setTimeout(function () {
@@ -3366,12 +3368,13 @@
     });
   });
 
-  /* ---------- Sons suaves (criados na hora pelo navegador, sem arquivos de áudio) ---------- */
+  /* ---------- Sons suaves (criados na hora pelo navegador, sem arquivos de áudio) ----------
+     Os navegadores só deixam tocar som depois do primeiro toque ou clique na página. Se o portal tentar tocar
+     antes disso (por exemplo, o som de entrada), ele guarda o pedido e toca no primeiro toque. */
   var Sfx = (function () {
-    var ctx = null;
+    var ctx = null, pendingOpen = false, unlocked = false;
     function ac() {
       if (!ctx) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try { ctx = new C(); } catch (e) { return null; } }
-      if (ctx.state === "suspended") { try { ctx.resume(); } catch (e) {} }
       return ctx;
     }
     function tone(f1, f2, dur, vol, delay) {
@@ -3382,18 +3385,89 @@
       o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
       return true;
     }
+    function chime() { tone(523.25, 0, 0.55, 0.035, 0); tone(783.99, 0, 0.6, 0.03, 0.11); tone(1046.5, 0, 0.75, 0.022, 0.22); }
+    function unlock() {
+      var c = ac(); if (!c) return;
+      var after = function () {
+        if (c.state !== "running") return;
+        unlocked = true;
+        if (pendingOpen) { pendingOpen = false; if (prefs.sound) chime(); }
+        Amb.sync();
+      };
+      if (c.state === "running") after(); else if (c.resume) c.resume().then(after).catch(function () {});
+    }
+    ["pointerdown", "keydown", "touchend"].forEach(function (ev) { document.addEventListener(ev, unlock, true); });
     return {
+      ctx: function () { var c = ac(); return c && c.state === "running" ? c : null; },
+      unlocked: function () { return unlocked; },
       tap: function () { if (prefs.sound) tone(880, 620, 0.07, 0.03); },
       toggle: function (on) { if (prefs.sound) { tone(on ? 660 : 880, on ? 990 : 590, 0.09, 0.03); } },
       open: function () {
         if (!prefs.sound) return;
-        var go = function () { tone(523.25, 0, 0.55, 0.035, 0); tone(783.99, 0, 0.6, 0.03, 0.11); tone(1046.5, 0, 0.75, 0.022, 0.22); };
         var c = ac(); if (!c) return;
-        if (c.state === "running") go();
-        else if (c.resume) c.resume().then(function () { if (c.state === "running") go(); }).catch(function () {});
+        if (c.state === "running") { chime(); return; }
+        pendingOpen = true; // toca no primeiro toque na tela
+        if (c.resume) c.resume().then(function () { if (c.state === "running" && pendingOpen) { pendingOpen = false; chime(); Amb.sync(); } }).catch(function () {});
       }
     };
   })();
+
+  /* ---------- Som ambiente: riacho, brisa e passarinhos ao longe ----------
+     Tudo gerado pelo navegador (sem arquivos), bem baixinho. Só toca com a conta aberta e a aba visível. */
+  var Amb = (function () {
+    var nodes = null, birdT = null, on = false;
+    function noiseBuffer(c, sec, brown) {
+      var n = Math.floor(c.sampleRate * sec), b = c.createBuffer(2, n, c.sampleRate);
+      for (var ch = 0; ch < 2; ch++) {
+        var d = b.getChannelData(ch), last = 0;
+        for (var i = 0; i < n; i++) { var w = Math.random() * 2 - 1; if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w * 0.5; }
+      }
+      return b;
+    }
+    function lfo(c, freq, depth, target, base) {
+      var o = c.createOscillator(), g = c.createGain(); o.frequency.value = freq; g.gain.value = depth; o.connect(g); g.connect(target); target.value = base; o.start(); return o;
+    }
+    function bird(c, out) {
+      var t = c.currentTime + 0.05, notes = 2 + Math.floor(Math.random() * 4), base = 2600 + Math.random() * 1600;
+      var pan = c.createStereoPanner ? c.createStereoPanner() : null; if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; pan.connect(out); }
+      for (var k = 0; k < notes; k++) {
+        var o = c.createOscillator(), g = c.createGain(), st = t + k * (0.11 + Math.random() * 0.06), f = base * (0.9 + Math.random() * 0.3);
+        o.type = "sine"; o.frequency.setValueAtTime(f, st); o.frequency.exponentialRampToValueAtTime(f * (1.15 + Math.random() * 0.35), st + 0.07);
+        g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(0.012 + Math.random() * 0.01, st + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, st + 0.09);
+        o.connect(g); g.connect(pan || out); o.start(st); o.stop(st + 0.12);
+      }
+    }
+    function scheduleBirds(c, out) { clearTimeout(birdT); birdT = setTimeout(function () { if (!nodes) return; bird(c, out); scheduleBirds(c, out); }, 5000 + Math.random() * 12000); }
+    function start() {
+      var c = Sfx.ctx(); if (!c || nodes) return;
+      var master = c.createGain(); master.gain.setValueAtTime(0.0001, c.currentTime); master.gain.exponentialRampToValueAtTime(0.32, c.currentTime + 4); master.connect(c.destination);
+      // riacho: ruído com filtro passa-faixa, com o volume variando devagar (como água correndo)
+      var sSrc = c.createBufferSource(); sSrc.buffer = noiseBuffer(c, 4, false); sSrc.loop = true;
+      var sBp = c.createBiquadFilter(); sBp.type = "bandpass"; sBp.frequency.value = 1100; sBp.Q.value = 0.6;
+      var sLp = c.createBiquadFilter(); sLp.type = "lowpass"; sLp.frequency.value = 2600;
+      var sG = c.createGain(); var l1 = lfo(c, 0.23, 0.025, sG.gain, 0.06); var l1b = lfo(c, 0.61, 0.012, sBp.frequency, 1100);
+      sSrc.connect(sBp); sBp.connect(sLp); sLp.connect(sG); sG.connect(master);
+      // brisa: ruído grave, subindo e descendo bem devagar
+      var wSrc = c.createBufferSource(); wSrc.buffer = noiseBuffer(c, 6, true); wSrc.loop = true;
+      var wLp = c.createBiquadFilter(); wLp.type = "lowpass"; wLp.frequency.value = 420;
+      var wG = c.createGain(); var l2 = lfo(c, 0.05, 0.03, wG.gain, 0.05);
+      wSrc.connect(wLp); wLp.connect(wG); wG.connect(master);
+      sSrc.start(); wSrc.start();
+      nodes = { master: master, srcs: [sSrc, wSrc], lfos: [l1, l1b, l2] };
+      scheduleBirds(c, master);
+    }
+    function stop() {
+      var c = Sfx.ctx(); clearTimeout(birdT); if (!nodes) return;
+      var n = nodes; nodes = null;
+      try { if (c) { n.master.gain.cancelScheduledValues(c.currentTime); n.master.gain.setValueAtTime(Math.max(n.master.gain.value, 0.0001), c.currentTime); n.master.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 1.2); } } catch (e) {}
+      setTimeout(function () { n.srcs.concat(n.lfos).forEach(function (x) { try { x.stop(); } catch (e) {} }); try { n.master.disconnect(); } catch (e) {} }, 1400);
+    }
+    function want() { return prefs.amb && !!currentUser && !document.hidden && !document.body.classList.contains("locked"); }
+    function sync() { if (want() && Sfx.ctx()) { if (!nodes) start(); } else stop(); }
+    document.addEventListener("visibilitychange", sync);
+    return { sync: sync, playing: function () { return !!nodes; } };
+  })();
+
   // Toque nos ícones: som, vibração curta e uma marcação leve
   var TAP_SEL = ".tabbar a, .tabbar button, .round-btn, .btn, .glass-btn, .tile, .sheet-item, .set-row, .set-acc, .stat, .stack-card, .mainnav a, .mainnav button, .drop-panel a, .m-row, .m-back, .m-chap, .seg button, .user-chip, .fb-fab, .plan-go, .bus-head, .pa-act button";
   document.addEventListener("click", function (e) {
@@ -3427,7 +3501,7 @@
     $("setName").textContent = u ? u.name : "Visitante";
     $("setMail").textContent = u ? (u.email === DEMO.email ? "Conta de demonstração" : u.email) : "";
     paintSeg("setTheme", themeMode()); paintSeg("setText", prefs.text);
-    $("setCalm").checked = prefs.calm; $("setSound").checked = prefs.sound; $("setVib").checked = prefs.vib;
+    $("setCalm").checked = prefs.calm; $("setSound").checked = prefs.sound; $("setAmb").checked = prefs.amb; $("setVib").checked = prefs.vib;
     $("setVibRow").hidden = !navigator.vibrate;
     $("setInstall").hidden = !(window.pfCanInstall && window.pfCanInstall());
     $("setLogout").hidden = !u;
@@ -3490,6 +3564,7 @@
     if (!reduceMotion) { var cv = $("p-" + currentView); if (cv) syncVideos(cv); }
   });
   $("setSound").addEventListener("change", function () { prefs.sound = this.checked; savePrefs(); if (prefs.sound) Sfx.tap(); });
+  $("setAmb").addEventListener("change", function () { prefs.amb = this.checked; savePrefs(); Amb.sync(); });
   $("setVib").addEventListener("change", function () { prefs.vib = this.checked; savePrefs(); if (prefs.vib && navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} } });
   $("setLogout").addEventListener("click", function () { closeSettings(true); $("pfLogout").click(); });
   // Créditos (celular): uma tela dentro das Configurações

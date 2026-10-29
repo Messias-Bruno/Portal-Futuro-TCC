@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.34 (29/10/2026):** créditos simplificados ("Desenvolvedor: Bruno Henrique Messias de Sousa" e "Créditos: João Vitor Lucena e Lorena Ramiro"); botão de tema antes da engrenagem; som de entrada corrigido (quando o navegador bloqueia som antes do primeiro toque, ele toca no primeiro toque); novo som ambiente de natureza (riacho, brisa e passarinhos ao longe), gerado pelo navegador, bem baixo, só com a conta aberta e a aba visível, com opção nas Configurações.
 - **v1.33 (29/10/2026):** o botão "Instalar" das Configurações (celular e computador) instala o app direto, pelo pedido do próprio navegador, e só aparece quando o app ainda não foi instalado e o navegador permite instalar. No iPhone, que não deixa sites instalarem sozinhos, ele mostra o passo a passo do Safari. Novo `assets/js/early.js`, carregado antes de tudo para não perder o aviso de instalação.
 - **v1.32 (29/10/2026):** botão de instalar o aplicativo em destaque no topo das Configurações (cartão com o ícone do app), visível sempre que o portal não está instalado.
 - **v1.31 (29/10/2026):** créditos com a equipe: Desenvolvedor Bruno Henrique Messias de Sousa; Documentação e testes João Vitor Lucena; Documentação Lorena Ramiro. "Instalar o aplicativo" sempre aparece nas Configurações fora do app; quando o navegador não oferece o botão, o portal explica onde instalar.

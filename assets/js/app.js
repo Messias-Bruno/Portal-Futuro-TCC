@@ -3501,7 +3501,7 @@
   $("setCred").addEventListener("click", function () { credits(true); });
   $("setCredBack").addEventListener("click", function () { credits(false); });
   $("setFb").addEventListener("click", function () { closeSettings(true); setTimeout(function () { $("fbOpen").click(); }, 50); });
-  $("setInstall").addEventListener("click", function () { closeSettings(true); $("installBtn").click(); });
+  $("setInstallBtn").addEventListener("click", function () { $("installBtn").click(); });
   $("setClear").addEventListener("click", function () {
     var u = currentUser; if (!u || !u.cloud) return;
     var dirty = false; try { dirty = localStorage.getItem(CACHE + u.id + ".dirty") === "1"; } catch (e) {}

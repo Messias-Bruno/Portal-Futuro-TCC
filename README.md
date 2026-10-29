@@ -81,6 +81,7 @@ As datas fixas (Unicamp, ENEM e feriados) e as faixas salariais ficam no início
 
 ## Histórico de versões
 
+- **v1.32 (29/10/2026):** botão de instalar o aplicativo em destaque no topo das Configurações (cartão com o ícone do app), visível sempre que o portal não está instalado.
 - **v1.31 (29/10/2026):** créditos com a equipe: Desenvolvedor Bruno Henrique Messias de Sousa; Documentação e testes João Vitor Lucena; Documentação Lorena Ramiro. "Instalar o aplicativo" sempre aparece nas Configurações fora do app; quando o navegador não oferece o botão, o portal explica onde instalar.
 - **v1.30 (29/10/2026):** o portal mudou para o Cloudflare Pages: novo endereço **https://portal-futuro.pages.dev** (os créditos gratuitos do Netlify acabaram e as publicações ficaram paradas até 19/11). Cabeçalhos de segurança em `_headers` e arquivos internos escondidos por `_redirects`. Endereço atualizado no link de compartilhamento, na agenda (.ics) e nas notificações.
 - **v1.29 (23/10/2026):** créditos em todas as versões: "Desenvolvedor: Bruno Henrique Messias de Sousa" no lugar de "Idealização e créditos", sem o nome da equipe.

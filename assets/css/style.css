@@ -1569,3 +1569,14 @@ html.calm *,html.calm *::before,html.calm *::after{animation-duration:.01ms!impo
   .hero-secondary{display:none}
   .view-inner{padding-bottom:28px}
 }
+
+/* Configurações: cartão de instalar o aplicativo */
+.set-install{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 14px;align-items:center;margin-top:12px;padding:16px;border-radius:20px;background:linear-gradient(135deg,#0B3550 0%,#00283F 60%,#3a2a33 100%);color:#F6F3EC;box-shadow:0 10px 30px rgb(0 40 63 / .25)}
+.set-install[hidden]{display:none}
+.set-install img{width:56px;height:56px;border-radius:14px;box-shadow:0 4px 14px rgb(0 0 0 / .3)}
+.set-install .si-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.set-install .si-txt b{font-weight:500;font-size:1.02rem}
+.set-install .si-txt span{font-size:.84rem;line-height:1.4;color:rgb(246 243 236 / .78)}
+.set-install-btn{grid-column:1 / -1;width:100%;height:44px;background:#E8CF86;color:#1d1a10;font-weight:500}
+.set-install-btn:hover{background:#efd998}
+.set-install-btn .ico{width:18px;height:18px}

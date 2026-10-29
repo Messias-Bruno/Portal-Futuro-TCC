@@ -3429,7 +3429,7 @@
     paintSeg("setTheme", themeMode()); paintSeg("setText", prefs.text);
     $("setCalm").checked = prefs.calm; $("setSound").checked = prefs.sound; $("setVib").checked = prefs.vib;
     $("setVibRow").hidden = !navigator.vibrate;
-    $("setInstall").hidden = isStandalone();
+    $("setInstall").hidden = !(window.pfCanInstall && window.pfCanInstall());
     $("setLogout").hidden = !u;
     var cloud = !!(u && u.cloud);
     $("setClearD").textContent = cloud ? "Apaga a cópia guardada aqui e baixa tudo de novo da nuvem." : "Disponível para contas na nuvem. A demonstração guarda tudo só neste aparelho.";
@@ -3501,7 +3501,6 @@
   $("setCred").addEventListener("click", function () { credits(true); });
   $("setCredBack").addEventListener("click", function () { credits(false); });
   $("setFb").addEventListener("click", function () { closeSettings(true); setTimeout(function () { $("fbOpen").click(); }, 50); });
-  $("setInstallBtn").addEventListener("click", function () { $("installBtn").click(); });
   $("setClear").addEventListener("click", function () {
     var u = currentUser; if (!u || !u.cloud) return;
     var dirty = false; try { dirty = localStorage.getItem(CACHE + u.id + ".dirty") === "1"; } catch (e) {}
@@ -3675,18 +3674,31 @@
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
       window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); });
     }
-    var wrap = $("installWrap"), btn = $("installBtn"), ios = $("iosDialog"), deferred = null;
+    // O botão de instalar só aparece quando dá para instalar de verdade: o navegador avisou que o app pode ser
+    // instalado (Android e computador) ou é um iPhone fora do app. Depois de instalado, ele some.
+    var wrap = $("installWrap"), btn = $("installBtn"), ios = $("iosDialog"), card = $("setInstall"), cbtn = $("setInstallBtn");
     var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if (standalone) return;
-    if (isIOS) wrap.hidden = false;
-    window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; wrap.hidden = false; });
-    window.addEventListener("appinstalled", function () { wrap.hidden = true; deferred = null; toast("Portal Futuro instalado. Procure o ícone na tela do celular."); });
-    btn.addEventListener("click", function () {
-      if (deferred) { deferred.prompt(); deferred.userChoice.then(function () { deferred = null; }); return; }
-      if (isIOS) { document.body.classList.remove("has-cursor"); if (typeof ios.showModal === "function") ios.showModal(); else ios.setAttribute("open", ""); return; }
-      toast(window.matchMedia("(max-width: 760px)").matches ? "No Chrome, toque em ⋮ (canto de cima) e depois em Instalar aplicativo ou Adicionar à tela inicial." : "No Chrome, clique no ícone de instalar na barra de endereço, ou em ⋮ › Transmitir, salvar e compartilhar › Instalar.");
-    });
+    function can() { return !standalone && !window.__pfInstalled && (!!window.__pfBIP || isIOS); }
+    function paint() { var ok = can(); wrap.hidden = !ok; card.hidden = !ok; }
+    window.pfCanInstall = can;
+    if (standalone) { paint(); return; }
+    paint();
+    document.addEventListener("pf-installable", paint);
+    document.addEventListener("pf-installed", function () { paint(); toast("Portal Futuro instalado. Procure o ícone da estrela na tela inicial."); });
+    // Se o app já estiver instalado neste aparelho, o navegador às vezes conta (Chrome)
+    if (navigator.getInstalledRelatedApps) navigator.getInstalledRelatedApps().then(function (l) { if (l && l.length) { window.__pfInstalled = true; paint(); } }).catch(function () {});
+    function install() {
+      var ev = window.__pfBIP;
+      if (ev) {
+        ev.prompt();
+        ev.userChoice.then(function (r) { window.__pfBIP = null; if (r && r.outcome === "accepted") window.__pfInstalled = true; paint(); }).catch(function () {});
+        return;
+      }
+      if (isIOS) { document.body.classList.remove("has-cursor"); if (typeof ios.showModal === "function") ios.showModal(); else ios.setAttribute("open", ""); }
+    }
+    btn.addEventListener("click", install);
+    cbtn.addEventListener("click", install);
     ios.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", function () { ios.close(); }); });
     ios.addEventListener("click", function (e) { if (e.target === ios) ios.close(); });
   })();
